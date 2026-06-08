@@ -15,22 +15,23 @@ GTEST_LIBS = -L$(HOME)/.local/lib -lgtest -lgtest_main -pthread
 # ==========================================
 # SEPARATE OUTPUT DIRECTORIES
 # ==========================================
-HOST_BUILD_DIR = build_host
-RV_BUILD_DIR   = build_rv
+HOST_BUILD_DIR = build/host
+RV_BUILD_DIR   = build/rv
 
 # Source files
-SRC_FILES   = main.cpp
-TEST_FILES  = host_tests.cpp
+SRC_FILES   = src/main.cpp
+TEST_FILES  = tests/host_tests.cpp
 
 
 # ==========================================
 # QEMU CONFIGURATIONS
 # ==========================================
 
-VLEN = 128  # Set VLEN to 128 bits for RISC-V Vector Extension
+# Default VLEN for QEMU (128, 256, or 512)
+VLEN = 128
 
 # ==========================================
-.PHONY: all test canny_rv run clean
+.PHONY: all test canny_rv run sweep clean
 
 all: test canny_rv
 
@@ -56,3 +57,15 @@ run: $(RV_BUILD_DIR)/canny_pipeline.elf
 clean:
 	rm -rf $(HOST_BUILD_DIR) $(RV_BUILD_DIR)
 	@echo "--- Workspace Cleaned ---"
+
+
+# --- RULE 5: make sweep (Test multiple VLEN configurations) ---
+sweep: $(RV_BUILD_DIR)/canny_pipeline.elf
+	@echo "--- Sweeping VLEN across 128, 256, 512, and 1024 bits ---"
+	@for v in 128 256 512; do \
+		echo "========================================="; \
+		echo "Testing VLEN=$$v"; \
+		qemu-riscv64 -cpu rv64,v=true,vlen=$$v $(RV_BUILD_DIR)/canny_pipeline.elf; \
+	done
+	@echo "========================================="
+	@echo "--- Sweep Complete ---"
