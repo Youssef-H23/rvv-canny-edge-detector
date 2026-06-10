@@ -1,22 +1,49 @@
-#include <riscv_vector.h>
-#include <stdio.h>
+#include "../headers/canny_scalar.h"
 
-int main(){
+#include <cstdlib>   // atoi, aligned_alloc, free
+#include <cstdio>    // printf, fprintf
 
-	//puting data in the device RAM
-	int32_t src1[4] = {1, 4, 6, 10};
-	int32_t src2[4] = {10, 45, 62, 40};
-	int32_t dest[4] = {0, 0, 0, 0};
 
-	//Loading data on vector regester from RAM
-	size_t vl = __riscv_vsetvl_e32m1(4);
-	printf("%d \n", vl);
-	vint32m1_t v1 = __riscv_vle32_v_i32m1(src1, vl);
-	vint32m1_t v2 = __riscv_vle32_v_i32m1(src2, vl);
 
-	vint32m1_t res = __riscv_vadd_vv_i32m1(v1, v2, vl);
+int main(int argc, char* argv[]) {
 
-	__riscv_vse32_v_i32m1(dest, res, vl);
-	printf("Result: [%d, %d, %d, %d]\n", dest[0], dest[1], dest[2], dest[3]);
-	return 0;
+    if (argc < 4) {
+        fprintf(stderr, "Usage: %s <input.raw> <width> <height>\n", argv[0]);
+        fprintf(stderr, "Example: %s images/input.raw 512 512\n", argv[0]);
+        return 1;
+    }
+
+    const char* input_path = argv[1];
+    int width  = atoi(argv[2]);
+    int height = atoi(argv[3]);
+    int total  = width * height;   // number of pixels
+
+    printf("=== Canny Edge Detection - Phase 2 Scalar Pipeline ===\n");
+    printf("Image: %s  |  Size: %dx%d\n\n", input_path, width, height);
+
+    uint8_t* input = load_raw_image(input_path, width, height);
+    if (!input) {
+        fprintf(stderr, "Error: could not open '%s'\n", input_path);
+        return 1;
+    }
+
+    // All buffers are 64-byte aligned for RVV compatibility in later phases.
+    uint8_t* blurred = (uint8_t*)aligned_alloc(64, align64(total));
+
+    int cx = width / 2, cy = height / 2;   // center pixel, used for sanity prints
+
+    // ---- Stage 1: Gaussian blur ----
+    printf("[Stage 1]  Gaussian blur (5x5, zero-padding)\n");
+    gaussian_blur_scalar(input, blurred, width, height);
+    printf("           center pixel: input=%d  blurred=%d\n",
+           input[cy * width + cx], blurred[cy * width + cx]);
+
+    // ---- Save output ----
+    save_raw_image("output_blurred.raw", blurred, width, height);
+    printf("output_blurred.raw\n");
+
+    free(input); free(blurred);
+
+    printf("\nDone.\n");
+    return 0;
 }

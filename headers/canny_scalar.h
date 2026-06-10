@@ -31,4 +31,46 @@ uint8_t* load_raw_image(const char* path, int width, int height);
 //   Output : true on success, false on file error
 bool save_raw_image(const char* path, const uint8_t* data, int width, int height);
 
+// ============================================================================
+// GENERIC 2D CONVOLUTION (template)
+//
+//   Input  : input image, kernel coefficients, kernel size, divisor
+//   Op     : for each pixel, multiply-accumulate the ksize*ksize neighborhood
+//            with the kernel, divide by divisor, clamp to [0, 255]
+//   Output : convolved image written to 'output'
+//
+// Template parameters:
+//   PixelT  - pixel type              (uint8_t for 8-bit grayscale)
+//   AccumT  - accumulator type        (int32_t to avoid overflow while accumulating)
+//   KernelT - kernel coefficient type (int16_t for integer kernels)
+//
+// Boundary handling: zero-padding. Out-of-bounds pixels are treated as 0,
+// which keeps the boundary condition uniform and simplifies later vectorization.
+//
+// ============================================================================
+template<typename PixelT, typename AccumT, typename KernelT>
+void convolve2D(const PixelT* input, PixelT* output,
+                int width, int height,
+                const KernelT* kernel, int ksize,
+                AccumT divisor);
+
+// Forces the standard grayscale instantiation to be compiled in canny_scalar.cpp
+// so other translation units (main, tests) can link against it.
+extern template void convolve2D<uint8_t, int32_t, int16_t>(
+    const uint8_t*, uint8_t*, int, int, const int16_t*, int, int32_t);
+
+// ============================================================================
+// STAGE 1 - GAUSSIAN BLUR
+//
+//   Input  : grayscale image (width*height bytes)
+//   Op     : 2D convolution with a 5x5 integer Gaussian kernel (coeffs sum to 273),
+//            divide by 273, clamp to [0, 255]
+//   Output : blurred grayscale image
+//
+// Output fits in uint8_t: max sum = 255 * 273 = 69615, divided by 273 = 255.
+// Thin wrapper that calls convolve2D with the Gaussian kernel.
+// ============================================================================
+void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
+                          int width, int height);
+
 #endif  // CANNY_SCALAR_H
