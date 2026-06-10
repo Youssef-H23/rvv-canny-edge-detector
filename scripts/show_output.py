@@ -1,7 +1,10 @@
 from PIL import Image
 import numpy as np
 names = [
-    "output_blurred"
+    "output_blurred",
+    "output_direction",
+    "output_magnitude_l1",
+    "output_magnitude_l2"
 ]
 width, height = 512, 341
 try:
