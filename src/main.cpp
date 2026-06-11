@@ -34,6 +34,9 @@ int main(int argc, char* argv[]) {
     uint8_t* mag_l1  = (uint8_t*)aligned_alloc(64, align64(total));
     uint8_t* mag_l2  = (uint8_t*)aligned_alloc(64, align64(total));
     uint8_t* dir     = (uint8_t*)aligned_alloc(64, align64(total));
+    uint8_t* nms     = (uint8_t*)aligned_alloc(64, align64(total));
+    uint8_t* labels  = (uint8_t*)aligned_alloc(64, align64(total));
+    uint8_t* edges   = (uint8_t*)aligned_alloc(64, align64(total));
 
     int cx = width / 2, cy = height / 2;   // center pixel, used for sanity prints
 
@@ -84,8 +87,38 @@ int main(int argc, char* argv[]) {
     save_raw_image("output_direction.raw",    dir,    width, height);
     printf("output_magnitude_l1.raw / magnitude_l2 / direction\n");
 
+    // The rest of the pipeline uses the L1 magnitude (the norm targeted for Phase 6).
+
+    // ---- Stage 4: Non-maximum suppression ----
+    printf("[Stage 4]  Non-maximum suppression\n");
+    non_maximum_suppression_scalar(mag_l1, dir, nms, width, height);
+
+    // ---- Stage 5a: Double thresholding ----
+    printf("[Stage 5a] Double thresholding (low=20, high=80)\n");
+    double_threshold_scalar(nms, labels, width, height, 20, 80);
+    int strong = 0, weak = 0;
+    for (int i = 0; i < total; ++i) {
+        if      (labels[i] == EDGE_STRONG) strong++;
+        else if (labels[i] == EDGE_WEAK)   weak++;
+    }
+    printf("           strong=%d  weak=%d\n", strong, weak);
+
+    // ---- Stage 5b: Hysteresis ----
+    printf("[Stage 5b] Hysteresis edge tracing (iterative)\n");
+    hysteresis_scalar(labels, edges, width, height);
+    int final_edges = 0;
+    for (int i = 0; i < total; ++i)
+        if (edges[i] == 255) final_edges++;
+    printf("           final edge pixels: %d\n", final_edges);
+
+    // ---- Save outputs ----
+    save_raw_image("output_nms.raw",   nms,   width, height);
+    save_raw_image("output_edges.raw", edges, width, height);
+    printf("output_nms.raw / edges\n");
+
     free(input); free(blurred); free(gx); free(gy);
     free(mag_l1); free(mag_l2); free(dir);
+    free(nms); free(labels); free(edges);
 
     printf("\nDone.\n");
     return 0;

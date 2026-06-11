@@ -3,8 +3,10 @@ import numpy as np
 names = [
     "output_blurred",
     "output_direction",
+    "output_edges",
     "output_magnitude_l1",
-    "output_magnitude_l2"
+    "output_magnitude_l2",
+    "output_nms"
 ]
 width, height = 512, 341
 try:

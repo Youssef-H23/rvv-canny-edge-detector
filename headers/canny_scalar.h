@@ -137,4 +137,64 @@ void compute_direction_scalar(const int16_t* gx, const int16_t* gy,
                               uint8_t* direction,
                               int width, int height);
 
+// ============================================================================
+// STAGE 4 - NON-MAXIMUM SUPPRESSION  [bonus]
+//
+//   Input  : magnitude image, direction image
+//   Op     : compare each pixel to its two neighbors along the gradient direction;
+//            keep it only if it is a local maximum, otherwise set it to 0
+//   Output : thinned magnitude image (1-pixel-wide edges)
+//
+// The direction sector selects which neighbor pair to compare:
+//   0   -> left and right
+//   90  -> top and bottom
+//   45  -> top-right and bottom-left
+//   135 -> top-left and bottom-right
+// The 1-pixel image border is set to 0 because its neighbors are out of bounds.
+// ============================================================================
+void non_maximum_suppression_scalar(const uint8_t* magnitude,
+                                    const uint8_t* direction,
+                                    uint8_t* output,
+                                    int width, int height);
+
+// Label values produced by double thresholding and consumed by hysteresis.
+static const uint8_t EDGE_STRONG = 255;   // definite edge
+static const uint8_t EDGE_WEAK   = 128;   // candidate edge, resolved in hysteresis
+static const uint8_t EDGE_NONE   = 0;     // not an edge
+
+// ============================================================================
+// STAGE 5a - DOUBLE THRESHOLDING  [bonus]
+//
+//   Input  : NMS-thinned magnitude image, low threshold, high threshold
+//   Op     : classify each pixel by comparing it against the two thresholds
+//   Output : label image (EDGE_STRONG / EDGE_WEAK / EDGE_NONE)
+//
+//   pixel >= high        -> EDGE_STRONG
+//   low <= pixel < high   -> EDGE_WEAK
+//   pixel <  low          -> EDGE_NONE
+// ============================================================================
+void double_threshold_scalar(const uint8_t* nms_input,
+                             uint8_t* labels,
+                             int width, int height,
+                             uint8_t low_threshold,
+                             uint8_t high_threshold);
+
+// ============================================================================
+// STAGE 5b - HYSTERESIS EDGE TRACING  [bonus]
+//
+//   Input  : label image from double thresholding (STRONG / WEAK / NONE)
+//   Op     : promote every WEAK pixel that is 8-connected (directly or through a
+//            chain of weak pixels) to a STRONG pixel; discard the rest
+//   Output : binary edge image (255 = edge, 0 = background)
+//
+// Uses an iterative flood-fill that repeats until no pixel changes. A single pass
+// would break edge chains such as STRONG -> WEAK -> WEAK -> WEAK, because a weak
+// pixel touching only a not-yet-promoted weak neighbor would be discarded.
+// Iterating propagates the STRONG label one step per pass until the chain is
+// fully traced, removing the broken/dotted edges a single pass produces.
+// ============================================================================
+void hysteresis_scalar(const uint8_t* labels,
+                       uint8_t* output,
+                       int width, int height);
+
 #endif  // CANNY_SCALAR_H

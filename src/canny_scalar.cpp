@@ -1,7 +1,8 @@
 #include "../headers/canny_scalar.h"
 
+#include <cstring>   // memset, memcpy
 #include <cmath>     // sqrtf
-#include <cstdio>    // fopen, fread, fwrite, fclose
+#include <cstdio>    // fopen, fread, fclose
 
 // ============================================================================
 // IMAGE I/O
@@ -79,7 +80,7 @@ template void convolve2D<uint8_t, int32_t, int16_t>(
 
 void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
                           int width, int height) {
-    // 5x5 integer Gaussian kernel, coefficients sum to 273
+    // 5x5 integer Gaussian kernel, coefficients sum to 273 
     static const int16_t GAUSSIAN_KERNEL[25] = {
         1,  4,  7,  4, 1,
         4, 16, 26, 16, 4,
@@ -221,4 +222,115 @@ void compute_direction_scalar(const int16_t* gx, const int16_t* gy,
 
         direction[i] = angle;
     }
+}
+
+// ============================================================================
+// STAGE 4 - NON-MAXIMUM SUPPRESSION  [bonus]
+// ============================================================================
+
+void non_maximum_suppression_scalar(const uint8_t* magnitude,
+                                    const uint8_t* direction,
+                                    uint8_t* output,
+                                    int width, int height) {
+    std::memset(output, 0, width * height);   // clears borders and all suppressed pixels
+
+    // Skip the 1-pixel border: those pixels have out-of-bounds neighbors
+    for (int y = 1; y < height - 1; ++y) {
+        for (int x = 1; x < width - 1; ++x) {
+            int idx = y * width + x;
+            int mag = magnitude[idx];
+
+            int n1 = 0, n2 = 0;   // the two neighbors along the gradient direction
+            switch (direction[idx]) {
+                case 0:                                 // horizontal gradient
+                    n1 = magnitude[idx - 1];            // left
+                    n2 = magnitude[idx + 1];            // right
+                    break;
+                case 90:                                // vertical gradient
+                    n1 = magnitude[idx - width];        // top
+                    n2 = magnitude[idx + width];        // bottom
+                    break;
+                case 45:                                // diagonal
+                    n1 = magnitude[idx - width + 1];    // top-right
+                    n2 = magnitude[idx + width - 1];    // bottom-left
+                    break;
+                case 135:                               // anti-diagonal
+                    n1 = magnitude[idx - width - 1];    // top-left
+                    n2 = magnitude[idx + width + 1];    // bottom-right
+                    break;
+            }
+
+            // Keep the pixel only if it is at least as large as both neighbors
+            output[idx] = (mag >= n1 && mag >= n2) ? (uint8_t)mag : 0;
+        }
+    }
+}
+
+// ============================================================================
+// STAGE 5a - DOUBLE THRESHOLDING  [bonus]
+// ============================================================================
+
+void double_threshold_scalar(const uint8_t* nms_input,
+                             uint8_t* labels,
+                             int width, int height,
+                             uint8_t low_threshold,
+                             uint8_t high_threshold) {
+    int total = width * height;
+    for (int i = 0; i < total; ++i) {
+        if      (nms_input[i] >= high_threshold) labels[i] = EDGE_STRONG;
+        else if (nms_input[i] >= low_threshold)  labels[i] = EDGE_WEAK;
+        else                                      labels[i] = EDGE_NONE;
+    }
+}
+
+// ============================================================================
+// STAGE 5b - HYSTERESIS EDGE TRACING  [bonus]
+// ============================================================================
+
+void hysteresis_scalar(const uint8_t* labels,
+                       uint8_t* output,
+                       int width, int height) {
+    int total = width * height;
+
+    // Mutable working copy so weak pixels can be promoted to strong in place
+    uint8_t* work = (uint8_t*)aligned_alloc(64, align64(total));
+    std::memcpy(work, labels, total);
+
+    // Iterative flood-fill: each pass promotes weak pixels adjacent to a strong
+    // pixel. Repeat until a full pass makes no change, meaning every reachable
+    // chain has been traced. This is what prevents broken edge lines.
+    bool changed = true;
+    while (changed) {
+        changed = false;
+
+        for (int y = 1; y < height - 1; ++y) {
+            for (int x = 1; x < width - 1; ++x) {
+                int idx = y * width + x;
+                if (work[idx] != EDGE_WEAK) continue;   // only weak pixels can be promoted
+
+                // Scan the 8-connected neighborhood for any strong pixel
+                bool touches_strong = false;
+                for (int ny = -1; ny <= 1 && !touches_strong; ++ny) {
+                    for (int nx = -1; nx <= 1; ++nx) {
+                        if (work[(y + ny) * width + (x + nx)] == EDGE_STRONG) {
+                            touches_strong = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (touches_strong) {
+                    work[idx] = EDGE_STRONG;   // promote
+                    changed = true;            // a change means another pass is needed
+                }
+            }
+        }
+    }
+
+    // Final output: strong pixels become edges (255), everything else is background (0)
+    for (int i = 0; i < total; ++i) {
+        output[i] = (work[i] == EDGE_STRONG) ? 255 : 0;
+    }
+
+    free(work);
 }
