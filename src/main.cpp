@@ -46,10 +46,6 @@ int main(int argc, char* argv[]) {
     printf("           center pixel: input=%d  blurred=%d\n",
            input[cy * width + cx], blurred[cy * width + cx]);
 
-    // ---- Save output ----
-    save_raw_image("output_blurred.raw", blurred, width, height);
-    printf("output_blurred.raw\n");
-
     // ---- Stage 2: Sobel gradients ----
     printf("[Stage 2]  Sobel gradients (3x3, SoA layout)\n");
     sobel_gradients_scalar(blurred, gx, gy, width, height);
@@ -81,12 +77,6 @@ int main(int argc, char* argv[]) {
     printf("           distribution -> 0:%d  45:%d  90:%d  135:%d\n",
            c0, c45, c90, c135);
 
-    // ---- Save outputs ----
-    save_raw_image("output_magnitude_l1.raw", mag_l1, width, height);
-    save_raw_image("output_magnitude_l2.raw", mag_l2, width, height);
-    save_raw_image("output_direction.raw",    dir,    width, height);
-    printf("output_magnitude_l1.raw / magnitude_l2 / direction\n");
-
     // The rest of the pipeline uses the L1 magnitude (the norm targeted for Phase 6).
 
     // ---- Stage 4: Non-maximum suppression ----
@@ -112,9 +102,14 @@ int main(int argc, char* argv[]) {
     printf("           final edge pixels: %d\n", final_edges);
 
     // ---- Save outputs ----
-    save_raw_image("output_nms.raw",   nms,   width, height);
-    save_raw_image("output_edges.raw", edges, width, height);
-    printf("output_nms.raw / edges\n");
+    printf("\n--- Saving outputs ---\n");
+    save_raw_image("output_blurred.raw",      blurred, width, height);
+    save_raw_image("output_magnitude_l1.raw", mag_l1,  width, height);
+    save_raw_image("output_magnitude_l2.raw", mag_l2,  width, height);
+    save_raw_image("output_direction.raw",    dir,     width, height);
+    save_raw_image("output_nms.raw",          nms,     width, height);
+    save_raw_image("output_edges.raw",        edges,   width, height);
+    printf("output_blurred.raw / magnitude_l1 / magnitude_l2 / direction / nms / edges\n");
 
     free(input); free(blurred); free(gx); free(gy);
     free(mag_l1); free(mag_l2); free(dir);

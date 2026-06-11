@@ -1,6 +1,12 @@
-#what every in build directory
+#whatever in the build directory
 build/
 
+#object files and executables (that may accedintally be outside the build directory)
+*.o
+*.elf
+
+# raw images
+*.raw
 
 # Editor/OS clutter
 .vscode/
