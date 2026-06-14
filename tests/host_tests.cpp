@@ -1,45 +1,157 @@
 #include <gtest/gtest.h>
 #include <vector>
-#include "canny_scalar.h"
+#include "../headers/canny_scalar.h"
 
+// STAGE 1: GAUSSIAN BLUR TESTS
 
-// STAGE 1: GAUSSIAN BLUR TEST
+// the same uniform image. We use 16x16 so interior pixels are far enough
+// from the border that zero-padding does not affect them.
+TEST(CannyPipelineTest, GaussianBlurUniformImage) {
+    int width = 16, height = 16;
 
-TEST(CannyPipelineTest, GaussianBlurFilter) {
-    int width = 5;
-    int height = 5;
-    
-    // Initialize a 5x5 input image with uniform pixel values (100)
-    std::vector<uint8_t> input_image(width * height, 100);
-    // Initialize an empty output buffer of the same size
+    std::vector<uint8_t> input_image(width * height, 128);
     std::vector<uint8_t> output_image(width * height, 0);
 
-    // Call the scalar Gaussian Blur implementation
     gaussian_blur_scalar(input_image.data(), output_image.data(), width, height);
 
-    // Assert that the center pixel value is processed and greater than 0
-    EXPECT_GT(output_image[12], 0);
+    // Check every interior pixel (skip 2-pixel border = kernel radius)
+    for (int y = 2; y < height - 2; ++y)
+        for (int x = 2; x < width - 2; ++x)
+            EXPECT_NEAR(output_image[y * width + x], 128, 1)
+                << "at (" << x << "," << y << ")";
 }
 
 
-// STAGE 2: SOBEL GRADIENTS TEST
+TEST(CannyPipelineTest, GaussianBlurBlackImage) {
+    int width = 16, height = 16;
 
-TEST(CannyPipelineTest, SobelGradientsFilter) {
-    int width = 5;
-    int height = 5;
+    std::vector<uint8_t> input_image(width * height, 0);
+    std::vector<uint8_t> output_image(width * height, 99);  // garbage fill to catch non-writes
 
-    // Initialize a 5x5 blurred input image (mock data)
+    gaussian_blur_scalar(input_image.data(), output_image.data(), width, height);
+
+    for (int i = 0; i < width * height; ++i)
+        EXPECT_EQ(output_image[i], 0) << "at pixel " << i;
+}
+
+
+// symmetrically (the kernel is symmetric so the output must be too).
+TEST(CannyPipelineTest, GaussianBlurImpulseSymmetric) {
+    int width = 15, height = 15;
+    int cx = width / 2, cy = height / 2;
+
+    std::vector<uint8_t> input_image(width * height, 0);
+    std::vector<uint8_t> output_image(width * height, 0);
+
+    input_image[cy * width + cx] = 255;  // single bright pixel at centre
+
+    gaussian_blur_scalar(input_image.data(), output_image.data(), width, height);
+
+    // Check four-fold symmetry around the centre for the 5x5 spread
+    for (int dy = -2; dy <= 2; ++dy) {
+        for (int dx = -2; dx <= 2; ++dx) {
+            uint8_t v00 = output_image[(cy + dy) * width + (cx + dx)];
+            uint8_t v01 = output_image[(cy + dy) * width + (cx - dx)];
+            uint8_t v10 = output_image[(cy - dy) * width + (cx + dx)];
+            uint8_t v11 = output_image[(cy - dy) * width + (cx - dx)];
+            EXPECT_EQ(v00, v01) << "H-symmetry failed dy=" << dy << " dx=" << dx;
+            EXPECT_EQ(v00, v10) << "V-symmetry failed dy=" << dy << " dx=" << dx;
+            EXPECT_EQ(v00, v11) << "Diagonal-symmetry failed dy=" << dy << " dx=" << dx;
+        }
+    }
+}
+ 
+ 
+// STAGE 2: SOBEL GRADIENTS TESTS
+
+
+TEST(CannyPipelineTest, SobelGradientsUniformImage) {
+    int width = 16, height = 16;
+
     std::vector<uint8_t> blurred_image(width * height, 150);
-    
-    // Sobel outputs separate Gx and Gy signed 16-bit arrays (Structure of Arrays)
     std::vector<int16_t> gx(width * height, 0);
     std::vector<int16_t> gy(width * height, 0);
 
-    // Call the scalar Sobel Gradients implementation
     sobel_gradients_scalar(blurred_image.data(), gx.data(), gy.data(), width, height);
 
-    // Assert that the buffers are modified and test runner can link successfully
-    SUCCEED();
+    // Check interior pixels only (skip 1-pixel border = Sobel kernel radius)
+    for (int y = 1; y < height - 1; ++y)
+        for (int x = 1; x < width - 1; ++x) {
+            int idx = y * width + x;
+            EXPECT_EQ(gx[idx], 0) << "gx non-zero at (" << x << "," << y << ")";
+            EXPECT_EQ(gy[idx], 0) << "gy non-zero at (" << x << "," << y << ")";
+        }
+}
+
+
+TEST(CannyPipelineTest, SobelGradientsVerticalEdge) {
+    int width = 20, height = 20;
+
+    std::vector<uint8_t> input_image(width * height, 0);
+    for (int y = 0; y < height; ++y)
+        for (int x = width / 2; x < width; ++x)
+            input_image[y * width + x] = 255;
+
+    std::vector<int16_t> gx(width * height, 0);
+    std::vector<int16_t> gy(width * height, 0);
+
+    sobel_gradients_scalar(input_image.data(), gx.data(), gy.data(), width, height);
+
+    // At the edge column, gx should be large and gy should be ~0
+    int ex = width / 2;
+    for (int y = 2; y < height - 2; ++y) {
+        int idx = y * width + ex;
+        EXPECT_GT(gx[idx], 500)     << "Expected large gx at vertical edge, row " << y;
+        EXPECT_NEAR(gy[idx], 0, 4)  << "Expected near-zero gy at vertical edge, row " << y;
+    }
+}
+
+TEST(CannyPipelineTest, SobelGradientsHorizontalEdge) {
+    int width = 20, height = 20;
+
+    std::vector<uint8_t> input_image(width * height, 0);
+    for (int y = height / 2; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            input_image[y * width + x] = 255;
+
+    std::vector<int16_t> gx(width * height, 0);
+    std::vector<int16_t> gy(width * height, 0);
+
+    sobel_gradients_scalar(input_image.data(), gx.data(), gy.data(), width, height);
+
+    int ey = height / 2;
+    for (int x = 2; x < width - 2; ++x) {
+        int idx = ey * width + x;
+        EXPECT_GT(std::abs((int)gy[idx]), 500) << "Expected large |gy| at horizontal edge, col " << x;
+        EXPECT_NEAR(gx[idx], 0, 4)             << "Expected near-zero gx at horizontal edge, col " << x;
+    }
+}
+
+
+TEST(CannyPipelineTest, SobelGradientsDiagonalEdge) {
+    int width = 20, height = 20;
+
+    std::vector<uint8_t> input_image(width * height, 0);
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            if (x + y >= width)
+                input_image[y * width + x] = 255;
+
+    std::vector<int16_t> gx(width * height, 0);
+    std::vector<int16_t> gy(width * height, 0);
+
+    sobel_gradients_scalar(input_image.data(), gx.data(), gy.data(), width, height);
+
+    // Along the diagonal both components should be nonzero
+    int found = 0;
+    for (int y = 2; y < height - 2; ++y) {
+        int x = width - y;
+        if (x < 2 || x >= width - 2) continue;
+        int idx = y * width + x;
+        if (std::abs((int)gx[idx]) > 100 && std::abs((int)gy[idx]) > 100)
+            ++found;
+    }
+    EXPECT_GT(found, 3) << "Expected multiple diagonal pixels with both gx and gy nonzero";
 }
 
 // GoogleTest Main Entry Point
