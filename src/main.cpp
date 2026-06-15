@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 199309L  
 #include "../headers/canny_scalar.h"
 #include <cstdlib>   // atoi, aligned_alloc, free
 #include <cstdio>    // printf, fprintf, abs
