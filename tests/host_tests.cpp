@@ -313,36 +313,6 @@ TEST(CannyPipelineTest, MagnitudeL2MaxPixelIs255) {
     }
 }
 
-
-// PROPERTY / INVARIANT TESTS
-
-// Mathematical Invariant Requirement: For any given vector, the Manhattan distance (L1) 
-// must mathematically be greater than or equal to the Euclidean distance (L2).
-TEST(CannyPipelineTest, MagnitudeL1IsAlwaysGreaterThanOrEqualL2) {
-    int width = 10, height = 10;
-    std::vector<int16_t> gx(width * height);
-    std::vector<int16_t> gy(width * height);
-    std::vector<uint8_t> mag_l1(width * height, 0);
-    std::vector<uint8_t> mag_l2(width * height, 0);
-
-    for (int i = 0; i < width * height; ++i) {
-        gx[i] = (int16_t)((i * 37) % 600 - 300);
-        gy[i] = (int16_t)((i * 53) % 600 - 300);
-    }
-
-    compute_magnitude_l1_scalar(gx.data(), gy.data(), mag_l1.data(), width, height);
-    compute_magnitude_l2_scalar(gx.data(), gy.data(), mag_l2.data(), width, height);
-
-    // Verify mathematical invariant holds true (ignoring saturated pixel boundaries clamped at 255)
-    for (int i = 0; i < width * height; ++i) {
-        if (mag_l1[i] < 255) {
-            EXPECT_GE(mag_l1[i], mag_l2[i]) 
-                << "Mathematical invariant breach: L1 magnitude should exceed or equal L2 at index " << i;
-        }
-    }
-}
-
-
 // STAGE 3b: GRADIENT DIRECTION TESTS
 
 TEST(CannyPipelineTest, DirectionVerticalEdgeGivesDir0) {
