@@ -156,11 +156,8 @@ TEST(CannyPipelineTest, SobelGradientsDiagonalEdge) {
 
 
 
-// ============================================================================
 // STAGE 3a: MAGNITUDE L1 TESTS
-// ============================================================================
 
-// Requirement: L1 gives nonzero output on a random image and does not produce all-zeros.
 TEST(CannyPipelineTest, MagnitudeL1NonzeroOnRandomInput) {
     int width = 10, height = 10;
 
@@ -182,7 +179,7 @@ TEST(CannyPipelineTest, MagnitudeL1NonzeroOnRandomInput) {
     EXPECT_TRUE(has_nonzero) << "L1 magnitude produced all-zeros on a non-zero gradient image";
 }
 
-// Requirement: Output is always in [0, 255] (no overflow or underflow).
+
 TEST(CannyPipelineTest, MagnitudeL1OutputClamped) {
     int width = 10, height = 10;
 
@@ -203,7 +200,6 @@ TEST(CannyPipelineTest, MagnitudeL1OutputClamped) {
     }
 }
 
-// Requirement: Zero gradient -> zero magnitude.
 TEST(CannyPipelineTest, MagnitudeL1ZeroGradientGivesZero) {
     int width = 10, height = 10;
 
@@ -217,7 +213,7 @@ TEST(CannyPipelineTest, MagnitudeL1ZeroGradientGivesZero) {
         EXPECT_EQ(magnitude[i], 0) << "at pixel " << i;
 }
 
-// Requirement: The pixel with the largest gradient must map to 255.
+
 TEST(CannyPipelineTest, MagnitudeL1MaxPixelIs255) {
     int width = 10, height = 10;
 
@@ -230,16 +226,16 @@ TEST(CannyPipelineTest, MagnitudeL1MaxPixelIs255) {
     compute_magnitude_l1_scalar(gx.data(), gy.data(), magnitude.data(), width, height);
 
     EXPECT_EQ(magnitude[50], 255) << "pixel with max gradient must map to 255";
-    for (int i = 0; i < width * height; ++i)
-        if (i != 50)
+    for (int i = 0; i < width * height; ++i) {
+        if (i != 50) {
             EXPECT_EQ(magnitude[i], 0) << "zero-gradient pixel " << i << " must be 0";
+        }
+    }
 }
 
-// ============================================================================
-// STAGE 3a: MAGNITUDE L2 TESTS
-// ============================================================================
 
-// Requirement: L2 gives nonzero output on a random image and does not produce all-zeros.
+// STAGE 3a: MAGNITUDE L2 TESTS
+
 TEST(CannyPipelineTest, MagnitudeL2NonzeroOnRandomInput) {
     int width = 10, height = 10;
 
@@ -261,7 +257,7 @@ TEST(CannyPipelineTest, MagnitudeL2NonzeroOnRandomInput) {
     EXPECT_TRUE(has_nonzero) << "L2 magnitude produced all-zeros on a non-zero gradient image";
 }
 
-// Requirement: Output is always in [0, 255].
+
 TEST(CannyPipelineTest, MagnitudeL2OutputClamped) {
     int width = 10, height = 10;
 
@@ -282,7 +278,7 @@ TEST(CannyPipelineTest, MagnitudeL2OutputClamped) {
     }
 }
 
-// Requirement: Zero gradient -> zero magnitude.
+
 TEST(CannyPipelineTest, MagnitudeL2ZeroGradientGivesZero) {
     int width = 10, height = 10;
 
@@ -296,7 +292,7 @@ TEST(CannyPipelineTest, MagnitudeL2ZeroGradientGivesZero) {
         EXPECT_EQ(magnitude[i], 0) << "at pixel " << i;
 }
 
-// Requirement: The pixel with the largest gradient must map to 255.
+
 TEST(CannyPipelineTest, MagnitudeL2MaxPixelIs255) {
     int width = 10, height = 10;
 
@@ -310,19 +306,45 @@ TEST(CannyPipelineTest, MagnitudeL2MaxPixelIs255) {
     compute_magnitude_l2_scalar(gx.data(), gy.data(), magnitude.data(), width, height);
 
     EXPECT_EQ(magnitude[50], 255) << "pixel with max gradient must map to 255";
-    for (int i = 0; i < width * height; ++i)
-        if (i != 50)
+    for (int i = 0; i < width * height; ++i) {
+        if (i != 50) {
             EXPECT_EQ(magnitude[i], 0) << "zero-gradient pixel " << i << " must be 0";
+        }
+    }
 }
 
 
+// PROPERTY / INVARIANT TESTS
+
+// Mathematical Invariant Requirement: For any given vector, the Manhattan distance (L1) 
+// must mathematically be greater than or equal to the Euclidean distance (L2).
+TEST(CannyPipelineTest, MagnitudeL1IsAlwaysGreaterThanOrEqualL2) {
+    int width = 10, height = 10;
+    std::vector<int16_t> gx(width * height);
+    std::vector<int16_t> gy(width * height);
+    std::vector<uint8_t> mag_l1(width * height, 0);
+    std::vector<uint8_t> mag_l2(width * height, 0);
+
+    for (int i = 0; i < width * height; ++i) {
+        gx[i] = (int16_t)((i * 37) % 600 - 300);
+        gy[i] = (int16_t)((i * 53) % 600 - 300);
+    }
+
+    compute_magnitude_l1_scalar(gx.data(), gy.data(), mag_l1.data(), width, height);
+    compute_magnitude_l2_scalar(gx.data(), gy.data(), mag_l2.data(), width, height);
+
+    // Verify mathematical invariant holds true (ignoring saturated pixel boundaries clamped at 255)
+    for (int i = 0; i < width * height; ++i) {
+        if (mag_l1[i] < 255) {
+            EXPECT_GE(mag_l1[i], mag_l2[i]) 
+                << "Mathematical invariant breach: L1 magnitude should exceed or equal L2 at index " << i;
+        }
+    }
+}
 
 
-// ============================================================================
 // STAGE 3b: GRADIENT DIRECTION TESTS
-// ============================================================================
 
-// Requirement: Vertical edge image -> direction = 0 (horizontal gradient).
 TEST(CannyPipelineTest, DirectionVerticalEdgeGivesDir0) {
     int width = 20, height = 20;
 
@@ -348,7 +370,7 @@ TEST(CannyPipelineTest, DirectionVerticalEdgeGivesDir0) {
             << "Expected direction=0 at vertical edge, row " << y;
 }
 
-// Requirement: Horizontal edge image -> direction = 90 (vertical gradient).
+
 TEST(CannyPipelineTest, DirectionHorizontalEdgeGivesDir90) {
     int width = 20, height = 20;
 
@@ -374,7 +396,6 @@ TEST(CannyPipelineTest, DirectionHorizontalEdgeGivesDir90) {
             << "Expected direction=90 at horizontal edge, col " << x;
 }
 
-// Requirement: Diagonal edge -> direction = 45 or 135.
 TEST(CannyPipelineTest, DirectionDiagonalEdgeGivesDir45Or135) {
     int width = 20, height = 20;
 
