@@ -315,8 +315,112 @@ TEST(CannyPipelineTest, MagnitudeL2MaxPixelIs255) {
             EXPECT_EQ(magnitude[i], 0) << "zero-gradient pixel " << i << " must be 0";
 }
 
+
+
+
+// ============================================================================
+// STAGE 3b: GRADIENT DIRECTION TESTS
+// ============================================================================
+
+// Requirement: Vertical edge image -> direction = 0 (horizontal gradient).
+TEST(CannyPipelineTest, DirectionVerticalEdgeGivesDir0) {
+    int width = 20, height = 20;
+
+    std::vector<uint8_t> input(width * height, 0);
+    std::vector<uint8_t> blurred(width * height, 0);
+    std::vector<int16_t> gx(width * height, 0);
+    std::vector<int16_t> gy(width * height, 0);
+    std::vector<uint8_t> direction(width * height, 0);
+
+    // Left half black, right half white -> vertical edge at x = width/2
+    for (int y = 0; y < height; ++y)
+        for (int x = width / 2; x < width; ++x)
+            input[y * width + x] = 255;
+
+    gaussian_blur_scalar(input.data(), blurred.data(), width, height);
+    sobel_gradients_scalar(blurred.data(), gx.data(), gy.data(), width, height);
+    compute_direction_scalar(gx.data(), gy.data(), direction.data(), width, height);
+
+    // At the edge column, direction must be 0 (gradient is horizontal)
+    int ex = width / 2;
+    for (int y = 3; y < height - 3; ++y)
+        EXPECT_EQ(direction[y * width + ex], 0)
+            << "Expected direction=0 at vertical edge, row " << y;
+}
+
+// Requirement: Horizontal edge image -> direction = 90 (vertical gradient).
+TEST(CannyPipelineTest, DirectionHorizontalEdgeGivesDir90) {
+    int width = 20, height = 20;
+
+    std::vector<uint8_t> input(width * height, 0);
+    std::vector<uint8_t> blurred(width * height, 0);
+    std::vector<int16_t> gx(width * height, 0);
+    std::vector<int16_t> gy(width * height, 0);
+    std::vector<uint8_t> direction(width * height, 0);
+
+    // Top half black, bottom half white -> horizontal edge at y = height/2
+    for (int y = height / 2; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            input[y * width + x] = 255;
+
+    gaussian_blur_scalar(input.data(), blurred.data(), width, height);
+    sobel_gradients_scalar(blurred.data(), gx.data(), gy.data(), width, height);
+    compute_direction_scalar(gx.data(), gy.data(), direction.data(), width, height);
+
+    // At the edge row, direction must be 90 (gradient is vertical)
+    int ey = height / 2;
+    for (int x = 3; x < width - 3; ++x)
+        EXPECT_EQ(direction[ey * width + x], 90)
+            << "Expected direction=90 at horizontal edge, col " << x;
+}
+
+// Requirement: Diagonal edge -> direction = 45 or 135.
+TEST(CannyPipelineTest, DirectionDiagonalEdgeGivesDir45Or135) {
+    int width = 20, height = 20;
+
+    std::vector<uint8_t> input(width * height, 0);
+    std::vector<uint8_t> blurred(width * height, 0);
+    std::vector<int16_t> gx(width * height, 0);
+    std::vector<int16_t> gy(width * height, 0);
+    std::vector<uint8_t> direction(width * height, 0);
+
+    // Top-left black, bottom-right white -> diagonal edge
+    for (int y = 0; y < height; ++y)
+        for (int x = 0; x < width; ++x)
+            if (x + y >= width)
+                input[y * width + x] = 255;
+
+    gaussian_blur_scalar(input.data(), blurred.data(), width, height);
+    sobel_gradients_scalar(blurred.data(), gx.data(), gy.data(), width, height);
+    compute_direction_scalar(gx.data(), gy.data(), direction.data(), width, height);
+
+    // Along the diagonal, direction must be 45 or 135
+    int found = 0;
+    for (int y = 3; y < height - 3; ++y) {
+        int x = width - y;
+        if (x < 3 || x >= width - 3) continue;
+        int d = direction[y * width + x];
+        if (d == 45 || d == 135) ++found;
+    }
+    EXPECT_GT(found, 2) << "Expected diagonal pixels with direction=45 or 135";
+}
+
 // GoogleTest Main Entry Point
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
