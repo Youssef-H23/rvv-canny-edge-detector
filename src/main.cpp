@@ -1,9 +1,17 @@
 #include "../headers/canny_scalar.h"
-
 #include <cstdlib>   // atoi, aligned_alloc, free
-#include <cstdio>    // printf, fprintf
+#include <cstdio>    // printf, fprintf, abs
+#include <time.h>    // clock_gettime, CLOCK_MONOTONIC
 
 
+// BARE-METAL FILE I/O FIX FOR QEMU USER-MODE
+
+extern "C" {
+    int _openat(int dirfd, const char *pathname, int flags, int mode);
+    int _open(const char *pathname, int flags, int mode) {
+        return _openat(-100, pathname, flags, mode); // -100 is AT_FDCWD in Linux
+    }
+}
 
 int main(int argc, char* argv[]) {
 
@@ -40,66 +48,94 @@ int main(int argc, char* argv[]) {
 
     int cx = width / 2, cy = height / 2;   // center pixel, used for sanity prints
 
-    // ---- Stage 1: Gaussian blur ----
-    printf("[Stage 1]  Gaussian blur (5x5, zero-padding)\n");
-    gaussian_blur_scalar(input, blurred, width, height);
-    printf("           center pixel: input=%d  blurred=%d\n",
-           input[cy * width + cx], blurred[cy * width + cx]);
+    printf("--- Running Benchmark (100 Iterations) ---\n");
+    
+    // START TIMING
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
 
-    // ---- Stage 2: Sobel gradients ----
-    printf("[Stage 2]  Sobel gradients (3x3, SoA layout)\n");
-    sobel_gradients_scalar(blurred, gx, gy, width, height);
-    printf("           center gx=%d  gy=%d\n",
-           gx[cy * width + cx], gy[cy * width + cx]);
+    // BENCHMARK LOOP FOR STABLE PROFILING
+    for (int iter = 0; iter < 100; ++iter) {
+        
+        // ---- Stage 1: Gaussian blur ----
+        if (iter == 0) printf("[Stage 1]  Gaussian blur (5x5, zero-padding)\n");
+        gaussian_blur_scalar(input, blurred, width, height);
+        if (iter == 0) {
+            printf("           center pixel: input=%d  blurred=%d\n",
+                   input[cy * width + cx], blurred[cy * width + cx]);
+        }
 
-    // ---- Stage 3a: Magnitude (both norms, for comparison) ----
-    printf("[Stage 3a] Gradient magnitude L1 (|gx|+|gy|)\n");
-    compute_magnitude_l1_scalar(gx, gy, mag_l1, width, height);
+        // ---- Stage 2: Sobel gradients ----
+        if (iter == 0) printf("[Stage 2]  Sobel gradients (3x3, SoA layout)\n");
+        sobel_gradients_scalar(blurred, gx, gy, width, height);
+        if (iter == 0) {
+            printf("           center gx=%d  gy=%d\n",
+                   gx[cy * width + cx], gy[cy * width + cx]);
+        }
 
-    printf("[Stage 3a] Gradient magnitude L2 (sqrt(gx^2+gy^2))\n");
-    compute_magnitude_l2_scalar(gx, gy, mag_l2, width, height);
+        // ---- Stage 3a: Magnitude (both norms, for comparison) ----
+        if (iter == 0) printf("[Stage 3a] Gradient magnitude L1 (|gx|+|gy|)\n");
+        compute_magnitude_l1_scalar(gx, gy, mag_l1, width, height);
 
-    long diff_sum = 0;
-    for (int i = 0; i < total; ++i)
-        diff_sum += abs((int)mag_l1[i] - (int)mag_l2[i]);
-    printf("           avg L1 vs L2 difference: %.2f\n", (double)diff_sum / total);
+        if (iter == 0) printf("[Stage 3a] Gradient magnitude L2 (sqrt(gx^2+gy^2))\n");
+        compute_magnitude_l2_scalar(gx, gy, mag_l2, width, height);
 
-    // ---- Stage 3b: Direction ----
-    printf("[Stage 3b] Gradient direction (0/45/90/135)\n");
-    compute_direction_scalar(gx, gy, dir, width, height);
-    int c0 = 0, c45 = 0, c90 = 0, c135 = 0;
-    for (int i = 0; i < total; ++i) {
-        if      (dir[i] == 0)   c0++;
-        else if (dir[i] == 45)  c45++;
-        else if (dir[i] == 90)  c90++;
-        else                     c135++;
+        if (iter == 0) {
+            long diff_sum = 0;
+            for (int i = 0; i < total; ++i)
+                diff_sum += abs((int)mag_l1[i] - (int)mag_l2[i]);
+            printf("           avg L1 vs L2 difference: %.2f\n", (double)diff_sum / total);
+        }
+
+        // ---- Stage 3b: Direction ----
+        if (iter == 0) printf("[Stage 3b] Gradient direction (0/45/90/135)\n");
+        compute_direction_scalar(gx, gy, dir, width, height);
+        if (iter == 0) {
+            int c0 = 0, c45 = 0, c90 = 0, c135 = 0;
+            for (int i = 0; i < total; ++i) {
+                if      (dir[i] == 0)   c0++;
+                else if (dir[i] == 45)  c45++;
+                else if (dir[i] == 90)  c90++;
+                else                     c135++;
+            }
+            printf("           distribution -> 0:%d  45:%d  90:%d  135:%d\n",
+                   c0, c45, c90, c135);
+        }
+         
+		// The rest of the pipeline uses the L1 magnitude (the norm targeted for Phase 6).
+		 
+        // ---- Stage 4: Non-maximum suppression ----
+        if (iter == 0) printf("[Stage 4]  Non-maximum suppression\n");
+        non_maximum_suppression_scalar(mag_l1, dir, nms, width, height);
+
+        // ---- Stage 5a: Double thresholding ----
+        if (iter == 0) printf("[Stage 5a] Double thresholding (low=20, high=80)\n");
+        double_threshold_scalar(nms, labels, width, height, 20, 80);
+        if (iter == 0) {
+            int strong = 0, weak = 0;
+            for (int i = 0; i < total; ++i) {
+                if      (labels[i] == EDGE_STRONG) strong++;
+                else if (labels[i] == EDGE_WEAK)   weak++;
+            }
+            printf("           strong=%d  weak=%d\n", strong, weak);
+        }
+
+        // ---- Stage 5b: Hysteresis ----
+        if (iter == 0) printf("[Stage 5b] Hysteresis edge tracing (iterative)\n");
+        hysteresis_scalar(labels, edges, width, height);
+        if (iter == 0) {
+            int final_edges = 0;
+            for (int i = 0; i < total; ++i)
+                if (edges[i] == 255) final_edges++;
+            printf("           final edge pixels: %d\n", final_edges);
+        }
     }
-    printf("           distribution -> 0:%d  45:%d  90:%d  135:%d\n",
-           c0, c45, c90, c135);
 
-    // The rest of the pipeline uses the L1 magnitude (the norm targeted for Phase 6).
+    // END TIMING
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double time_taken = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1e-9;
 
-    // ---- Stage 4: Non-maximum suppression ----
-    printf("[Stage 4]  Non-maximum suppression\n");
-    non_maximum_suppression_scalar(mag_l1, dir, nms, width, height);
-
-    // ---- Stage 5a: Double thresholding ----
-    printf("[Stage 5a] Double thresholding (low=20, high=80)\n");
-    double_threshold_scalar(nms, labels, width, height, 20, 80);
-    int strong = 0, weak = 0;
-    for (int i = 0; i < total; ++i) {
-        if      (labels[i] == EDGE_STRONG) strong++;
-        else if (labels[i] == EDGE_WEAK)   weak++;
-    }
-    printf("           strong=%d  weak=%d\n", strong, weak);
-
-    // ---- Stage 5b: Hysteresis ----
-    printf("[Stage 5b] Hysteresis edge tracing (iterative)\n");
-    hysteresis_scalar(labels, edges, width, height);
-    int final_edges = 0;
-    for (int i = 0; i < total; ++i)
-        if (edges[i] == 255) final_edges++;
-    printf("           final edge pixels: %d\n", final_edges);
+    printf("\nExecution Time for 100 iterations: %f seconds\n", time_taken);
 
     // ---- Save outputs ----
     printf("\n--- Saving outputs ---\n");
@@ -118,3 +154,7 @@ int main(int argc, char* argv[]) {
     printf("\nDone.\n");
     return 0;
 }
+
+
+
+
