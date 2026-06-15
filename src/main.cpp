@@ -1,12 +1,9 @@
-#define _POSIX_C_SOURCE 199309L  
 #include "../headers/canny_scalar.h"
 #include <cstdlib>   // atoi, aligned_alloc, free
 #include <cstdio>    // printf, fprintf, abs
-#include <time.h>    // clock_gettime, CLOCK_MONOTONIC
-
+#include <chrono>    
 
 // BARE-METAL FILE I/O FIX FOR QEMU USER-MODE
-
 extern "C" {
     int _openat(int dirfd, const char *pathname, int flags, int mode);
     int _open(const char *pathname, int flags, int mode) {
@@ -51,9 +48,8 @@ int main(int argc, char* argv[]) {
 
     printf("--- Running Benchmark (100 Iterations) ---\n");
     
-    // START TIMING
-    struct timespec start, end;
-    clock_gettime(CLOCK_MONOTONIC, &start);
+    // START TIMING (Using high_resolution_clock)
+    auto start = std::chrono::high_resolution_clock::now();
 
     // BENCHMARK LOOP FOR STABLE PROFILING
     for (int iter = 0; iter < 100; ++iter) {
@@ -103,8 +99,8 @@ int main(int argc, char* argv[]) {
                    c0, c45, c90, c135);
         }
          
-		// The rest of the pipeline uses the L1 magnitude (the norm targeted for Phase 6).
-		 
+        // The rest of the pipeline uses the L1 magnitude (the norm targeted for Phase 6).
+         
         // ---- Stage 4: Non-maximum suppression ----
         if (iter == 0) printf("[Stage 4]  Non-maximum suppression\n");
         non_maximum_suppression_scalar(mag_l1, dir, nms, width, height);
@@ -133,8 +129,9 @@ int main(int argc, char* argv[]) {
     }
 
     // END TIMING
-    clock_gettime(CLOCK_MONOTONIC, &end);
-    double time_taken = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) * 1e-9;
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = end - start;
+    double time_taken = diff.count();
 
     printf("\nExecution Time for 100 iterations: %f seconds\n", time_taken);
 
@@ -155,7 +152,3 @@ int main(int argc, char* argv[]) {
     printf("\nDone.\n");
     return 0;
 }
-
-
-
-
