@@ -64,7 +64,14 @@ To remove all generated build artifacts, object files, and binaries:
 ```bash
 make clean
 ```
+## Optimization Results (Benchmark 100 iterations)
 
+| Optimization Flag | Execution Time (seconds) |
+| :--- | :--- |
+| **-O0** | 49.90 |
+| **-O1** | 22.49 |
+| **-O2** | 21.86 |
+| **-O3** | 22.59 |
 
 
 ## 👥 Project Supervision & Team
