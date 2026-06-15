@@ -313,6 +313,41 @@ TEST(CannyPipelineTest, MagnitudeL2MaxPixelIs255) {
     }
 }
 
+
+// PROPERTY / INVARIANT TESTS
+
+// Due to independent normalization scales, L1 sum will generally be greater than or equal to L2 sum.
+TEST(CannyPipelineTest, MagnitudeL1VsL2Comparison) {
+    int width = 10, height = 10;
+
+    std::vector<int16_t> gx(width * height);
+    std::vector<int16_t> gy(width * height);
+
+    std::vector<uint8_t> l1(width * height, 0);
+    std::vector<uint8_t> l2(width * height, 0);
+
+    // Generate fixed pseudo-random gradients
+    for (int i = 0; i < width * height; ++i) {
+        gx[i] = (int16_t)((i * 37 + 13) % 400 - 200);
+        gy[i] = (int16_t)((i * 53 +  7) % 400 - 200);
+    }
+
+    compute_magnitude_l1_scalar(gx.data(), gy.data(), l1.data(), width, height);
+    compute_magnitude_l2_scalar(gx.data(), gy.data(), l2.data(), width, height);
+
+    int l1_sum = 0;
+    int l2_sum = 0;
+
+    for (int i = 0; i < width * height; ++i) {
+        l1_sum += l1[i];
+        l2_sum += l2[i];
+    }
+
+    EXPECT_GE(l1_sum, l2_sum)
+        << "Normalized L1 total image energy should be >= L2 total energy";
+}
+
+
 // STAGE 3b: GRADIENT DIRECTION TESTS
 
 TEST(CannyPipelineTest, DirectionVerticalEdgeGivesDir0) {
