@@ -79,6 +79,12 @@ make clean
 * **Code Size Increase (-O2 to -O3):** The binary size increased from 395 KB to 399 KB when moving to `-O3` because the compiler aggressively performs loop unrolling and function inlining to prioritize speed, which naturally inflates the file size.
 
 
+### Phase 4: Auto-Vectorization Report Insights (-O3)
+
+* **What the Compiler Handled:** The compiler successfully auto-vectorized 4 basic loops in `main.cpp` (lines 82, 92, 113, 125) handling simple array operations using RISC-V variable-length vector modes.
+* **Where the Compiler Failed (The Heavy Filters):** In `canny_scalar.cpp` (lines 47, 48, 51), the core image processing loops for Gaussian Blur and Sobel failed to vectorize. The compiler reported constraints like `loop nest containing two or more consecutive inner loops` and `vectorization is not profitable`.
+* **The Takeaway:** Because the compiler struggled with complex loop nesting and memory-clobbering operations, automated optimization is insufficient for the heavy computation stages. This officially justifies the need for Phase 6, where we will manually implement hand-crafted RISC-V Vector (RVV) intrinsics to bypass compiler limitations.
+
 
 ## 👥 Project Supervision & Team
 
@@ -89,5 +95,5 @@ make clean
 * Mounir Mohamed Ali - 91241076
 * Nour El-Din El-Husseiny Abou El-Hadid - 91240822
 * Omar Raed Fahmy - 91240506
-* Yahia Mohamed Ibrahim - 91240855
+* Yahya Mohamed Ibrahim - 91240855
 * Youssef Haggag Fawzy - 91240871
