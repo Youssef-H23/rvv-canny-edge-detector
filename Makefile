@@ -27,7 +27,7 @@ TEST_FILES   = tests/host_tests.cpp
 # QEMU + IMAGE CONFIGURATIONS
 # ==========================================
 VLEN   = 128
-IMG    = car.raw
+IMG    = images/car.raw
 WIDTH  = 512
 HEIGHT = 341
 
