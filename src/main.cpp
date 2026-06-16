@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     int height = atoi(argv[3]);
     int total  = width * height;   // number of pixels
 
-    printf("=== Canny Edge Detection - Phase 2 Scalar Pipeline ===\n");
+    printf("=== Canny Edge Detection - Phase 5 Profiling Pipeline ===\n");
     printf("Image: %s  |  Size: %dx%d\n\n", input_path, width, height);
 
     uint8_t* input = load_raw_image(input_path, width, height);
@@ -46,17 +46,30 @@ int main(int argc, char* argv[]) {
 
     int cx = width / 2, cy = height / 2;   // center pixel, used for sanity prints
 
-    printf("--- Running Benchmark (100 Iterations) ---\n");
+    printf("--- Running Benchmark & Profiling (100 Iterations) ---\n");
     
-    // START TIMING (Using high_resolution_clock)
-    auto start = std::chrono::high_resolution_clock::now();
+    // متغيرات لتجميع أوقات كل مرحلة على حدة
+    double t_gaussian = 0.0;
+    double t_sobel    = 0.0;
+    double t_mag_l1   = 0.0;
+    double t_mag_l2   = 0.0;
+    double t_dir      = 0.0;
+    double t_nms      = 0.0;
+    double t_thresh   = 0.0;
+    double t_hyst     = 0.0;
+
+    // START GLOBAL TIMING
+    auto start_global = std::chrono::high_resolution_clock::now();
 
     // BENCHMARK LOOP FOR STABLE PROFILING
     for (int iter = 0; iter < 100; ++iter) {
         
         // ---- Stage 1: Gaussian blur ----
         if (iter == 0) printf("[Stage 1]  Gaussian blur (5x5, zero-padding)\n");
+        auto s1 = std::chrono::high_resolution_clock::now();
         gaussian_blur_scalar(input, blurred, width, height);
+        auto e1 = std::chrono::high_resolution_clock::now();
+        t_gaussian += std::chrono::duration<double>(e1 - s1).count();
         if (iter == 0) {
             printf("           center pixel: input=%d  blurred=%d\n",
                    input[cy * width + cx], blurred[cy * width + cx]);
@@ -64,18 +77,28 @@ int main(int argc, char* argv[]) {
 
         // ---- Stage 2: Sobel gradients ----
         if (iter == 0) printf("[Stage 2]  Sobel gradients (3x3, SoA layout)\n");
+        auto s2 = std::chrono::high_resolution_clock::now();
         sobel_gradients_scalar(blurred, gx, gy, width, height);
+        auto e2 = std::chrono::high_resolution_clock::now();
+        t_sobel += std::chrono::duration<double>(e2 - s2).count();
         if (iter == 0) {
             printf("           center gx=%d  gy=%d\n",
                    gx[cy * width + cx], gy[cy * width + cx]);
         }
 
-        // ---- Stage 3a: Magnitude (both norms, for comparison) ----
+        // ---- Stage 3a: Magnitude L1 ----
         if (iter == 0) printf("[Stage 3a] Gradient magnitude L1 (|gx|+|gy|)\n");
+        auto s3a1 = std::chrono::high_resolution_clock::now();
         compute_magnitude_l1_scalar(gx, gy, mag_l1, width, height);
+        auto e3a1 = std::chrono::high_resolution_clock::now();
+        t_mag_l1 += std::chrono::duration<double>(e3a1 - s3a1).count();
 
+        // ---- Stage 3a: Magnitude L2 ----
         if (iter == 0) printf("[Stage 3a] Gradient magnitude L2 (sqrt(gx^2+gy^2))\n");
+        auto s3a2 = std::chrono::high_resolution_clock::now();
         compute_magnitude_l2_scalar(gx, gy, mag_l2, width, height);
+        auto e3a2 = std::chrono::high_resolution_clock::now();
+        t_mag_l2 += std::chrono::duration<double>(e3a2 - s3a2).count();
 
         if (iter == 0) {
             long diff_sum = 0;
@@ -86,7 +109,10 @@ int main(int argc, char* argv[]) {
 
         // ---- Stage 3b: Direction ----
         if (iter == 0) printf("[Stage 3b] Gradient direction (0/45/90/135)\n");
+        auto s3b = std::chrono::high_resolution_clock::now();
         compute_direction_scalar(gx, gy, dir, width, height);
+        auto e3b = std::chrono::high_resolution_clock::now();
+        t_dir += std::chrono::duration<double>(e3b - s3b).count();
         if (iter == 0) {
             int c0 = 0, c45 = 0, c90 = 0, c135 = 0;
             for (int i = 0; i < total; ++i) {
@@ -99,15 +125,19 @@ int main(int argc, char* argv[]) {
                    c0, c45, c90, c135);
         }
          
-        // The rest of the pipeline uses the L1 magnitude (the norm targeted for Phase 6).
-         
         // ---- Stage 4: Non-maximum suppression ----
         if (iter == 0) printf("[Stage 4]  Non-maximum suppression\n");
+        auto s4 = std::chrono::high_resolution_clock::now();
         non_maximum_suppression_scalar(mag_l1, dir, nms, width, height);
+        auto e4 = std::chrono::high_resolution_clock::now();
+        t_nms += std::chrono::duration<double>(e4 - s4).count();
 
         // ---- Stage 5a: Double thresholding ----
         if (iter == 0) printf("[Stage 5a] Double thresholding (low=20, high=80)\n");
+        auto s5a = std::chrono::high_resolution_clock::now();
         double_threshold_scalar(nms, labels, width, height, 20, 80);
+        auto e5a = std::chrono::high_resolution_clock::now();
+        t_thresh += std::chrono::duration<double>(e5a - s5a).count();
         if (iter == 0) {
             int strong = 0, weak = 0;
             for (int i = 0; i < total; ++i) {
@@ -119,7 +149,10 @@ int main(int argc, char* argv[]) {
 
         // ---- Stage 5b: Hysteresis ----
         if (iter == 0) printf("[Stage 5b] Hysteresis edge tracing (iterative)\n");
+        auto s5b = std::chrono::high_resolution_clock::now();
         hysteresis_scalar(labels, edges, width, height);
+        auto e5b = std::chrono::high_resolution_clock::now();
+        t_hyst += std::chrono::duration<double>(e5b - s5b).count();
         if (iter == 0) {
             int final_edges = 0;
             for (int i = 0; i < total; ++i)
@@ -128,12 +161,30 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    // END TIMING
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> diff = end - start;
-    double time_taken = diff.count();
+    // END GLOBAL TIMING
+    auto end_global = std::chrono::high_resolution_clock::now();
+    double total_time = std::chrono::duration<double>(end_global - start_global).count();
 
-    printf("\nExecution Time for 100 iterations: %f seconds\n", time_taken);
+    // حساب المجموع الفعلي الصافي لعمليات الفلاتر لمنع أي فروقات طفيفة بسبب الطباعة
+    double sum_stages = t_gaussian + t_sobel + t_mag_l1 + t_mag_l2 + t_dir + t_nms + t_thresh + t_hyst;
+
+    printf("\n==================================================\n");
+    printf("         PROFILING RESULTS (100 Iterations)        \n");
+    printf("==================================================\n");
+    printf("Stage                           | Time (s) | Break Down \n");
+    printf("--------------------------------------------------\n");
+    printf("Stage 1: Gaussian Blur          | %8.4f | %5.1f%%\n", t_gaussian, (t_gaussian / sum_stages) * 100.0);
+    printf("Stage 2: Sobel Gradients        | %8.4f | %5.1f%%\n", t_sobel,    (t_sobel / sum_stages) * 100.0);
+    printf("Stage 3a: Magnitude L1          | %8.4f | %5.1f%%\n", t_mag_l1,   (t_mag_l1 / sum_stages) * 100.0);
+    printf("Stage 3a: Magnitude L2          | %8.4f | %5.1f%%\n", t_mag_l2,   (t_mag_l2 / sum_stages) * 100.0);
+    printf("Stage 3b: Direction             | %8.4f | %5.1f%%\n", t_dir,      (t_dir / sum_stages) * 100.0);
+    printf("Stage 4: Non-Max Suppression    | %8.4f | %5.1f%%\n", t_nms,      (t_nms / sum_stages) * 100.0);
+    printf("Stage 5a: Double Threshold      | %8.4f | %5.1f%%\n", t_thresh,   (t_thresh / sum_stages) * 100.0);
+    printf("Stage 5b: Hysteresis Tracing    | %8.4f | %5.1f%%\n", t_hyst,     (t_hyst / sum_stages) * 100.0);
+    printf("--------------------------------------------------\n");
+    printf("Total Pure Pipeline Time        | %8.4f seconds\n", sum_stages);
+    printf("Total Execution Time (w/ IO)    | %8.4f seconds\n", total_time);
+    printf("==================================================\n");
 
     // ---- Save outputs ----
     printf("\n--- Saving outputs ---\n");
