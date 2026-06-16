@@ -64,14 +64,20 @@ To remove all generated build artifacts, object files, and binaries:
 ```bash
 make clean
 ```
-## Optimization Results (Benchmark 100 iterations)
 
-| Optimization Flag | Execution Time (seconds) |
-| :--- | :--- |
-| **-O0** | 49.90 |
-| **-O1** | 22.49 |
-| **-O2** | 21.86 |
-| **-O3** | 22.59 |
+## Phase 4: Compiler Optimization Sweep Results (100 iterations)
+
+| Optimization Flag | Execution Time (seconds) | Binary Size |
+| :--- | :--- | :--- |
+| **-O0** | 49.90 | 400 KB |
+| **-O1** | 22.49 | 395 KB |
+| **-O2** | 21.86 | 395 KB |
+| **-O3** | 22.59 | 399 KB |
+
+### Technical Observations on Binary Size:
+* **Code Size Reduction (-O0 to -O1):** The binary size decreased from 400 KB to 395 KB when moving to `-O1` because the compiler eliminated dead code and optimized redundant instructions.
+* **Code Size Increase (-O2 to -O3):** The binary size increased from 395 KB to 399 KB when moving to `-O3` because the compiler aggressively performs loop unrolling and function inlining to prioritize speed, which naturally inflates the file size.
+
 
 
 ## 👥 Project Supervision & Team
