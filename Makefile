@@ -85,6 +85,7 @@ sweep_opt: $(RV_BUILD_DIR)/canny_pipeline.elf
 		echo "========================================="; \
 		echo "Testing Optimization Level: $$opt"; \
 		$(RV_CXX) $(RV_FLAGS) -$$opt $(MAIN_SRC) $(PIPELINE_SRC) -o $(RV_BUILD_DIR)/canny_pipeline_$$opt.elf; \
+		echo "Binary size: $$(stat -c%s $(RV_BUILD_DIR)/canny_pipeline_$$opt.elf) bytes"; \
 		qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
 			$(RV_BUILD_DIR)/canny_pipeline_$$opt.elf $(IMG) $(WIDTH) $(HEIGHT); \
 	done
