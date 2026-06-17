@@ -32,7 +32,7 @@ WIDTH  = 512
 HEIGHT = 341
 
 # ==========================================
-.PHONY: all test host_run canny_rv run sweep clean
+.PHONY: all test host_run canny_rv run sweep show clean
 
 all: test canny_rv
 
@@ -77,7 +77,12 @@ sweep: $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "========================================="
 	@echo "--- Sweep Complete ---"
 
-# --- RULE 6: make clean ---
+# --- RULE 6: make show (Convert output/raw/*.raw to PNGs and display) ---
+show:
+	@echo "--- Converting output/raw/*.raw to PNG ---"
+	python3 scripts/show_output.py
+
+# --- RULE 7: make clean ---
 clean:
 	rm -rf $(HOST_BUILD_DIR) $(RV_BUILD_DIR)
 	@echo "--- Workspace Cleaned ---"
