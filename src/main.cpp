@@ -208,12 +208,12 @@ int main(int argc, char* argv[]) {
 
     // ---- Save outputs ----
     printf("\n--- Saving outputs ---\n");
-    save_raw_image("output_blurred.raw",      blurred, width, height);
-    save_raw_image("output_magnitude_l1.raw", mag_l1,  width, height);
-    save_raw_image("output_magnitude_l2.raw", mag_l2,  width, height);
-    save_raw_image("output_direction.raw",    dir,     width, height);
-    save_raw_image("output_nms.raw",          nms,     width, height);
-    save_raw_image("output_edges.raw",        edges,   width, height);
+    save_raw_image("output/raw/output_blurred.raw",      blurred, width, height);
+    save_raw_image("output/raw/output_magnitude_l1.raw", mag_l1,  width, height);
+    save_raw_image("output/raw/output_magnitude_l2.raw", mag_l2,  width, height);
+    save_raw_image("output/raw/output_direction.raw",    dir,     width, height);
+    save_raw_image("output/raw/output_nms.raw",          nms,     width, height);
+    save_raw_image("output/raw/output_edges.raw",        edges,   width, height);
     printf("output_blurred.raw / magnitude_l1 / magnitude_l2 / direction / nms / edges\n");
 
     free(input); free(blurred); free(gx); free(gy);

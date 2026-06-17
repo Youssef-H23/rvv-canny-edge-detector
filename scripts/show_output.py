@@ -1,20 +1,16 @@
 from PIL import Image
 import numpy as np
-names = [
-    "output_blurred",
-    "output_direction",
-    "output_edges",
-    "output_magnitude_l1",
-    "output_magnitude_l2",
-    "output_nms"
-]
+import glob
+import os
+
 width, height = 512, 341
 try:
-    for name in names:
-        raw_path = f"../output/{name}.raw"
+    raw_files = sorted(glob.glob("output/raw/*.raw"))
+    for raw_path in raw_files:
+        name = os.path.splitext(os.path.basename(raw_path))[0]
         raw_data = np.fromfile(raw_path, dtype=np.uint8).reshape((height, width))
         img = Image.fromarray(raw_data)
-        img.save(f"../output/{name}.png")
+        img.save(f"output/{name}.png")
         img.show()
     print("success")
 except Exception as e:
