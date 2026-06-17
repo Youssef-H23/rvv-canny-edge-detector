@@ -1,0 +1,141 @@
+--- Sweeping Optimization Levels O0, O1, O2, O3 Os Ofast---
+=========================================
+Testing Optimization Level: O0
+Binary size: 410128 bytes
+
+==================================================
+         PROFILING RESULTS (100 Iterations)        
+==================================================
+Stage                           | Time (s) | Break Down 
+--------------------------------------------------
+Stage 1: Gaussian Blur          |   7.4319 |  49.5%
+Stage 2: Sobel Gradients        |   2.9694 |  19.8%
+Stage 3a: Magnitude L1          |   0.4611 |   3.1%
+Stage 3a: Magnitude L2          |   3.0523 |  20.3%
+Stage 3b: Direction             |   0.2732 |   1.8%
+Stage 4: Non-Max Suppression    |   0.3604 |   2.4%
+Stage 5a: Double Threshold      |   0.1281 |   0.9%
+Stage 5b: Hysteresis Tracing    |   0.3378 |   2.2%
+--------------------------------------------------
+Total Pure Pipeline Time        |  15.0142 seconds
+Total Execution Time (w/ IO)    |  15.0212 seconds
+==================================================
+
+Done.
+=========================================
+Testing Optimization Level: O1
+Binary size: 403840 bytes
+
+==================================================
+         PROFILING RESULTS (100 Iterations)        
+==================================================
+Stage                           | Time (s) | Break Down 
+--------------------------------------------------
+Stage 1: Gaussian Blur          |   3.0403 |  44.8%
+Stage 2: Sobel Gradients        |   1.2546 |  18.5%
+Stage 3a: Magnitude L1          |   0.3322 |   4.9%
+Stage 3a: Magnitude L2          |   1.4675 |  21.6%
+Stage 3b: Direction             |   0.1652 |   2.4%
+Stage 4: Non-Max Suppression    |   0.2094 |   3.1%
+Stage 5a: Double Threshold      |   0.0797 |   1.2%
+Stage 5b: Hysteresis Tracing    |   0.2376 |   3.5%
+--------------------------------------------------
+Total Pure Pipeline Time        |   6.7865 seconds
+Total Execution Time (w/ IO)    |   6.7890 seconds
+==================================================
+
+Done.
+=========================================
+Testing Optimization Level: O2
+Binary size: 403976 bytes
+
+==================================================
+         PROFILING RESULTS (100 Iterations)        
+==================================================
+Stage                           | Time (s) | Break Down 
+--------------------------------------------------
+Stage 1: Gaussian Blur          |   2.5412 |  31.3%
+Stage 2: Sobel Gradients        |   1.1568 |  14.2%
+Stage 3a: Magnitude L1          |   1.3295 |  16.4%
+Stage 3a: Magnitude L2          |   2.2473 |  27.7%
+Stage 3b: Direction             |   0.1639 |   2.0%
+Stage 4: Non-Max Suppression    |   0.2126 |   2.6%
+Stage 5a: Double Threshold      |   0.0578 |   0.7%
+Stage 5b: Hysteresis Tracing    |   0.4157 |   5.1%
+--------------------------------------------------
+Total Pure Pipeline Time        |   8.1248 seconds
+Total Execution Time (w/ IO)    |   8.1274 seconds
+==================================================
+
+Done.
+=========================================
+Testing Optimization Level: O3
+Binary size: 407344 bytes
+
+==================================================
+         PROFILING RESULTS (100 Iterations)        
+==================================================
+Stage                           | Time (s) | Break Down 
+--------------------------------------------------
+Stage 1: Gaussian Blur          |   0.7873 |  11.1%
+Stage 2: Sobel Gradients        |   0.1975 |   2.8%
+Stage 3a: Magnitude L1          |   1.8386 |  26.0%
+Stage 3a: Magnitude L2          |   1.2873 |  18.2%
+Stage 3b: Direction             |   2.0979 |  29.7%
+Stage 4: Non-Max Suppression    |   0.2013 |   2.8%
+Stage 5a: Double Threshold      |   0.2678 |   3.8%
+Stage 5b: Hysteresis Tracing    |   0.3917 |   5.5%
+--------------------------------------------------
+Total Pure Pipeline Time        |   7.0692 seconds
+Total Execution Time (w/ IO)    |   7.0718 seconds
+==================================================
+
+Done.
+=========================================
+Testing Optimization Level: Os
+Binary size: 404024 bytes
+
+==================================================
+         PROFILING RESULTS (100 Iterations)        
+==================================================
+Stage                           | Time (s) | Break Down 
+--------------------------------------------------
+Stage 1: Gaussian Blur          |   3.1250 |  33.1%
+Stage 2: Sobel Gradients        |   1.0144 |  10.7%
+Stage 3a: Magnitude L1          |   1.7656 |  18.7%
+Stage 3a: Magnitude L2          |   2.8066 |  29.7%
+Stage 3b: Direction             |   0.1873 |   2.0%
+Stage 4: Non-Max Suppression    |   0.2352 |   2.5%
+Stage 5a: Double Threshold      |   0.0717 |   0.8%
+Stage 5b: Hysteresis Tracing    |   0.2364 |   2.5%
+--------------------------------------------------
+Total Pure Pipeline Time        |   9.4421 seconds
+Total Execution Time (w/ IO)    |   9.4448 seconds
+==================================================
+
+Done.
+=========================================
+Testing Optimization Level: Ofast
+Binary size: 407360 bytes
+
+==================================================
+         PROFILING RESULTS (100 Iterations)        
+==================================================
+Stage                           | Time (s) | Break Down 
+--------------------------------------------------
+Stage 1: Gaussian Blur          |   0.8646 |   8.0%
+Stage 2: Sobel Gradients        |   0.2185 |   2.0%
+Stage 3a: Magnitude L1          |   2.0327 |  18.8%
+Stage 3a: Magnitude L2          |   3.5855 |  33.2%
+Stage 3b: Direction             |   3.1536 |  29.2%
+Stage 4: Non-Max Suppression    |   0.2277 |   2.1%
+Stage 5a: Double Threshold      |   0.2965 |   2.7%
+Stage 5b: Hysteresis Tracing    |   0.4365 |   4.0%
+--------------------------------------------------
+Total Pure Pipeline Time        |  10.8156 seconds
+Total Execution Time (w/ IO)    |  10.8183 seconds
+==================================================
+
+Done.
+=========================================
+--- Sweep Complete ---
