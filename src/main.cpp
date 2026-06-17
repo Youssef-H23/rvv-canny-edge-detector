@@ -44,8 +44,8 @@ int main(int argc, char* argv[]) {
     int height = atoi(argv[3]);
     int total  = width * height;   // number of pixels
 
-    printf("=== Canny Edge Detection - Phase 5 Profiling Pipeline ===\n");
-    printf("Image: %s  |  Size: %dx%d\n\n", input_path, width, height);
+    // printf("=== Canny Edge Detection - Phase 5 Profiling Pipeline ===\n");
+    // printf("Image: %s  |  Size: %dx%d\n\n", input_path, width, height);
 
     uint8_t* input = load_raw_image(input_path, width, height);
     if (!input) {
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 
     int cx = width / 2, cy = height / 2;   // center pixel, used for sanity prints
 
-    printf("--- Running Benchmark & Profiling (100 Iterations) ---\n");
+    // printf("--- Running Benchmark & Profiling (100 Iterations) ---\n");
     
     // Storing the time for every stage separately to identify bottlenecks and guide optimization efforts.
     double t_gaussian = 0.0;
@@ -85,50 +85,50 @@ int main(int argc, char* argv[]) {
     for (int iter = 0; iter < 100; ++iter) {
         
         // ---- Stage 1: Gaussian blur ----
-        if (iter == 0) printf("[Stage 1]  Gaussian blur (5x5, zero-padding)\n");
+        // if (iter == 0) printf("[Stage 1]  Gaussian blur (5x5, zero-padding)\n");
         auto s1 = std::chrono::high_resolution_clock::now();
         gaussian_blur_scalar(input, blurred, width, height);
         auto e1 = std::chrono::high_resolution_clock::now();
         t_gaussian += std::chrono::duration<double>(e1 - s1).count();
-        if (iter == 0) {
-            printf("           center pixel: input=%d  blurred=%d\n",
-                   input[cy * width + cx], blurred[cy * width + cx]);
-        }
+        // if (iter == 0) {
+        //     // printf("           center pixel: input=%d  blurred=%d\n",
+        //         //    input[cy * width + cx], blurred[cy * width + cx]);
+        // }
 
         // ---- Stage 2: Sobel gradients ----
-        if (iter == 0) printf("[Stage 2]  Sobel gradients (3x3, SoA layout)\n");
+        // if (iter == 0) printf("[Stage 2]  Sobel gradients (3x3, SoA layout)\n");
         auto s2 = std::chrono::high_resolution_clock::now();
         sobel_gradients_scalar(blurred, gx, gy, width, height);
         auto e2 = std::chrono::high_resolution_clock::now();
         t_sobel += std::chrono::duration<double>(e2 - s2).count();
-        if (iter == 0) {
-            printf("           center gx=%d  gy=%d\n",
-                   gx[cy * width + cx], gy[cy * width + cx]);
-        }
+        // if (iter == 0) {
+        //     // printf("           center gx=%d  gy=%d\n",
+        //            gx[cy * width + cx], gy[cy * width + cx]);
+        // }
 
         // ---- Stage 3a: Magnitude L1 ----
-        if (iter == 0) printf("[Stage 3a] Gradient magnitude L1 (|gx|+|gy|)\n");
+        // if (iter == 0) printf("[Stage 3a] Gradient magnitude L1 (|gx|+|gy|)\n");
         auto s3a1 = std::chrono::high_resolution_clock::now();
         compute_magnitude_l1_scalar(gx, gy, mag_l1, width, height);
         auto e3a1 = std::chrono::high_resolution_clock::now();
         t_mag_l1 += std::chrono::duration<double>(e3a1 - s3a1).count();
 
         // ---- Stage 3a: Magnitude L2 ----
-        if (iter == 0) printf("[Stage 3a] Gradient magnitude L2 (sqrt(gx^2+gy^2))\n");
+        // if (iter == 0) printf("[Stage 3a] Gradient magnitude L2 (sqrt(gx^2+gy^2))\n");
         auto s3a2 = std::chrono::high_resolution_clock::now();
         compute_magnitude_l2_scalar(gx, gy, mag_l2, width, height);
         auto e3a2 = std::chrono::high_resolution_clock::now();
         t_mag_l2 += std::chrono::duration<double>(e3a2 - s3a2).count();
 
-        if (iter == 0) {
-            long diff_sum = 0;
-            for (int i = 0; i < total; ++i)
-                diff_sum += abs((int)mag_l1[i] - (int)mag_l2[i]);
-            printf("           avg L1 vs L2 difference: %.2f\n", (double)diff_sum / total);
-        }
+        // if (iter == 0) {
+        //     long diff_sum = 0;
+        //     for (int i = 0; i < total; ++i)
+        //         diff_sum += abs((int)mag_l1[i] - (int)mag_l2[i]);
+        //     // printf("           avg L1 vs L2 difference: %.2f\n", (double)diff_sum / total);
+        // }
 
         // ---- Stage 3b: Direction ----
-        if (iter == 0) printf("[Stage 3b] Gradient direction (0/45/90/135)\n");
+        // if (iter == 0) printf("[Stage 3b] Gradient direction (0/45/90/135)\n");
         auto s3b = std::chrono::high_resolution_clock::now();
         compute_direction_scalar(gx, gy, dir, width, height);
         auto e3b = std::chrono::high_resolution_clock::now();
@@ -141,34 +141,34 @@ int main(int argc, char* argv[]) {
                 else if (dir[i] == 90)  c90++;
                 else                     c135++;
             }
-            printf("           distribution -> 0:%d  45:%d  90:%d  135:%d\n",
-                   c0, c45, c90, c135);
+            // printf("           distribution -> 0:%d  45:%d  90:%d  135:%d\n",
+                //    c0, c45, c90, c135);
         }
          
         // ---- Stage 4: Non-maximum suppression ----
-        if (iter == 0) printf("[Stage 4]  Non-maximum suppression\n");
+        // if (iter == 0) printf("[Stage 4]  Non-maximum suppression\n");
         auto s4 = std::chrono::high_resolution_clock::now();
         non_maximum_suppression_scalar(mag_l1, dir, nms, width, height);
         auto e4 = std::chrono::high_resolution_clock::now();
         t_nms += std::chrono::duration<double>(e4 - s4).count();
 
         // ---- Stage 5a: Double thresholding ----
-        if (iter == 0) printf("[Stage 5a] Double thresholding (low=20, high=80)\n");
+        // if (iter == 0) printf("[Stage 5a] Double thresholding (low=20, high=80)\n");
         auto s5a = std::chrono::high_resolution_clock::now();
         double_threshold_scalar(nms, labels, width, height, 20, 80);
         auto e5a = std::chrono::high_resolution_clock::now();
         t_thresh += std::chrono::duration<double>(e5a - s5a).count();
-        if (iter == 0) {
-            int strong = 0, weak = 0;
-            for (int i = 0; i < total; ++i) {
-                if      (labels[i] == EDGE_STRONG) strong++;
-                else if (labels[i] == EDGE_WEAK)   weak++;
-            }
-            printf("           strong=%d  weak=%d\n", strong, weak);
-        }
+        // if (iter == 0) {
+        //     int strong = 0, weak = 0;
+        //     for (int i = 0; i < total; ++i) {
+        //         if      (labels[i] == EDGE_STRONG) strong++;
+        //         else if (labels[i] == EDGE_WEAK)   weak++;
+        //     }
+        //     printf("           strong=%d  weak=%d\n", strong, weak);
+        // }
 
         // ---- Stage 5b: Hysteresis ----
-        if (iter == 0) printf("[Stage 5b] Hysteresis edge tracing\n");
+        // if (iter == 0) printf("[Stage 5b] Hysteresis edge tracing\n");
         auto s5b = std::chrono::high_resolution_clock::now();
         hysteresis_scalar(labels, edges, width, height);
         auto e5b = std::chrono::high_resolution_clock::now();
@@ -201,14 +201,14 @@ int main(int argc, char* argv[]) {
     printf("==================================================\n");
 
     // ---- Save outputs ----
-    printf("\n--- Saving outputs ---\n");
+    // printf("\n--- Saving outputs ---\n");
     save_raw_image("output/raw/output_blurred.raw",      blurred, width, height);
     save_raw_image("output/raw/output_magnitude_l1.raw", mag_l1,  width, height);
     save_raw_image("output/raw/output_magnitude_l2.raw", mag_l2,  width, height);
     save_raw_image("output/raw/output_direction.raw",    dir,     width, height);
     save_raw_image("output/raw/output_nms.raw",          nms,     width, height);
     save_raw_image("output/raw/output_edges.raw",        edges,   width, height);
-    printf("output_blurred.raw / magnitude_l1 / magnitude_l2 / direction / nms / edges\n");
+    // printf("output_blurred.raw / magnitude_l1 / magnitude_l2 / direction / nms / edges\n");
 
     free(input); free(blurred); free(gx); free(gy);
     free(mag_l1); free(mag_l2); free(dir);

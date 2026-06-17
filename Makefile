@@ -32,7 +32,7 @@ WIDTH  = 512
 HEIGHT = 341
 
 # ==========================================
-.PHONY: all test host_run canny_rv run sweep show convert clean 
+.PHONY: all test host_run canny_rv run sweep_VLEN sweep_opt show convert clean 
 
 all: test canny_rv
 
@@ -56,7 +56,7 @@ host_run: $(MAIN_SRC) $(PIPELINE_SRC)
 # --- RULE 3: make canny_rv (RISC-V Cross-Compilation) ---
 canny_rv: $(MAIN_SRC) $(PIPELINE_SRC)
 	@mkdir -p $(RV_BUILD_DIR)
-	$(RV_CXX) $(RV_FLAGS) $(MAIN_SRC) $(PIPELINE_SRC) -o $(RV_BUILD_DIR)/canny_pipeline.elf
+	$(RV_CXX) $(RV_FLAGS) $(MAIN_SRC) -O3 $(PIPELINE_SRC)  -o $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- RISC-V Binary Successfully Compiled ---"
 
 # --- RULE 4: make run (Execute on QEMU) ---
@@ -66,7 +66,7 @@ run: $(RV_BUILD_DIR)/canny_pipeline.elf
 		$(RV_BUILD_DIR)/canny_pipeline.elf $(IMG) $(WIDTH) $(HEIGHT)
 
 # --- RULE 5: make sweep (Test multiple VLEN configurations) ---
-sweep: $(RV_BUILD_DIR)/canny_pipeline.elf
+sweep_VLEN: $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- Sweeping VLEN across 128, 256, 512 bits ---"
 	@for v in 128 256 512; do \
 		echo "========================================="; \
@@ -77,11 +77,27 @@ sweep: $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "========================================="
 	@echo "--- Sweep Complete ---"
 
-# --- RULE 6: make show (Convert output/raw/*.raw to PNGs and display) ---
+
+# --- RULE 6: make sweep_opt (Test multiple optimization levels) ---
+sweep_opt: $(RV_BUILD_DIR)/canny_pipeline.elf
+	@echo "--- Sweeping Optimization Levels O0, O1, O2, O3 Os Ofast---"
+	@for opt in O0 O1 O2 O3 Os Ofast; do \
+		echo "========================================="; \
+		echo "Testing Optimization Level: $$opt"; \
+		$(RV_CXX) $(RV_FLAGS) -$$opt $(MAIN_SRC) $(PIPELINE_SRC) -o $(RV_BUILD_DIR)/canny_pipeline_$$opt.elf; \
+		qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
+			$(RV_BUILD_DIR)/canny_pipeline_$$opt.elf $(IMG) $(WIDTH) $(HEIGHT); \
+	done
+	@echo "========================================="
+	@echo "--- Sweep Complete ---"
+
+
+
+# --- RULE 7: make show (Convert output/raw/*.raw to PNGs and display) ---
 show:
 	@echo "--- Converting output/raw/*.raw to PNG ---"
 	python3 scripts/show_output.py
-
+# --- RULE 8: make convert (Convert output PNGs back to raw for diffing) ---
 convert:
 	@echo "--- Converting to raw---"
 	python3 scripts/convert_to_raw.py
