@@ -8,11 +8,19 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository code
+      uses: actions/checkout@v4
 
-    - name: Test
+    - name: Install GoogleTest dependency
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgtest-dev cmake
+
+    - name: Build project
+      run: make
+
+    - name: Run GoogleTest suite
       run: make test
