@@ -4,10 +4,30 @@
 #include <chrono>    
 
 // BARE-METAL FILE I/O FIX FOR QEMU USER-MODE
+//
+// Problem 1 — wrong syscall: newlib's default _open makes the old "open" syscall
+// (number 1024) which does not exist on modern RISC-V Linux. We override _open
+// to call openat (syscall 56) with AT_FDCWD (-100) so QEMU forwards it correctly.
+//
+// Problem 2 — flag mismatch: newlib and Linux use different numeric values for
+// O_CREAT, O_TRUNC, and O_APPEND. Reading works because O_RDONLY = 0 in both.
+// Writing fails because fopen("wb") passes newlib's O_CREAT (0x200) | O_TRUNC (0x400),
+// which Linux misreads as O_TRUNC | O_APPEND with no O_CREAT — file never created,
+// fopen returns NULL, and save_raw_image silently fails.
+//
+//            newlib   Linux
+// O_CREAT    0x200    0x040
+// O_TRUNC    0x400    0x200
+// O_APPEND   0x008    0x400
 extern "C" {
     int _openat(int dirfd, const char *pathname, int flags, int mode);
     int _open(const char *pathname, int flags, int mode) {
-        return _openat(-100, pathname, flags, mode); // -100 is AT_FDCWD in Linux
+        // Access mode bits (O_RDONLY/O_WRONLY/O_RDWR) are identical in both — keep as-is.
+        int linux_flags = flags & 3;
+        if (flags & 0x008) linux_flags |= 0x400;  // newlib O_APPEND -> Linux O_APPEND
+        if (flags & 0x200) linux_flags |= 0x040;  // newlib O_CREAT  -> Linux O_CREAT
+        if (flags & 0x400) linux_flags |= 0x200;  // newlib O_TRUNC  -> Linux O_TRUNC
+        return _openat(-100, pathname, linux_flags, mode);
     }
 }
 
@@ -48,7 +68,7 @@ int main(int argc, char* argv[]) {
 
     printf("--- Running Benchmark & Profiling (100 Iterations) ---\n");
     
-    // متغيرات لتجميع أوقات كل مرحلة على حدة
+    // Storing the time for every stage separately to identify bottlenecks and guide optimization efforts.
     double t_gaussian = 0.0;
     double t_sobel    = 0.0;
     double t_mag_l1   = 0.0;
