@@ -292,45 +292,42 @@ void hysteresis_scalar(const uint8_t* labels,
                        int width, int height) {
     int total = width * height;
 
-    // Mutable working copy so weak pixels can be promoted to strong in place
     uint8_t* work = (uint8_t*)aligned_alloc(64, align64(total));
     std::memcpy(work, labels, total);
 
-    // Iterative flood-fill: each pass promotes weak pixels adjacent to a strong
-    // pixel. Repeat until a full pass makes no change, meaning every reachable
-    // chain has been traced. This is what prevents broken edge lines.
-    bool changed = true;
-    while (changed) {
-        changed = false;
+    // BFS queue: worst case every pixel is enqueued once
+    int* queue = (int*)aligned_alloc(64, align64(total * sizeof(int)));
+    int head = 0, tail = 0;
 
-        for (int y = 1; y < height - 1; ++y) {
-            for (int x = 1; x < width - 1; ++x) {
-                int idx = y * width + x;
-                if (work[idx] != EDGE_WEAK) continue;   // only weak pixels can be promoted
+    // Seed with all strong pixels
+    for (int i = 0; i < total; ++i)
+        if (work[i] == EDGE_STRONG)
+            queue[tail++] = i;
 
-                // Scan the 8-connected neighborhood for any strong pixel
-                bool touches_strong = false;
-                for (int ny = -1; ny <= 1 && !touches_strong; ++ny) {
-                    for (int nx = -1; nx <= 1; ++nx) {
-                        if (work[(y + ny) * width + (x + nx)] == EDGE_STRONG) {
-                            touches_strong = true;
-                            break;
-                        }
-                    }
-                }
+    // Flood-fill: promote weak neighbors of strong pixels
+    while (head < tail) {
+        int idx = queue[head++];
+        int y = idx / width, x = idx % width;
 
-                if (touches_strong) {
-                    work[idx] = EDGE_STRONG;   // promote
-                    changed = true;            // a change means another pass is needed
+        for (int ny = -1; ny <= 1; ++ny) {
+            for (int nx = -1; nx <= 1; ++nx) {
+                if (ny == 0 && nx == 0) continue; // skip the center pixel itself
+                int py = y + ny, px = x + nx; // neighbor coordinates
+                if (py < 0 || py >= height || px < 0 || px >= width) continue; // skip out-of-bounds neighbors
+                int nidx = py * width + px; // neighbor index in the 1D array
+
+                // If the neighbor is weak, promote it to strong and enqueue it for further exploration 
+                if (work[nidx] == EDGE_WEAK) {
+                    work[nidx] = EDGE_STRONG;
+                    queue[tail++] = nidx;
                 }
             }
         }
     }
 
-    // Final output: strong pixels become edges (255), everything else is background (0)
-    for (int i = 0; i < total; ++i) {
+    for (int i = 0; i < total; ++i)
         output[i] = (work[i] == EDGE_STRONG) ? 255 : 0;
-    }
 
+    free(queue);
     free(work);
 }

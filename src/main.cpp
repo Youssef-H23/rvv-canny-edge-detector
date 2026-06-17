@@ -168,24 +168,18 @@ int main(int argc, char* argv[]) {
         }
 
         // ---- Stage 5b: Hysteresis ----
-        if (iter == 0) printf("[Stage 5b] Hysteresis edge tracing (iterative)\n");
+        if (iter == 0) printf("[Stage 5b] Hysteresis edge tracing\n");
         auto s5b = std::chrono::high_resolution_clock::now();
         hysteresis_scalar(labels, edges, width, height);
         auto e5b = std::chrono::high_resolution_clock::now();
         t_hyst += std::chrono::duration<double>(e5b - s5b).count();
-        if (iter == 0) {
-            int final_edges = 0;
-            for (int i = 0; i < total; ++i)
-                if (edges[i] == 255) final_edges++;
-            printf("           final edge pixels: %d\n", final_edges);
-        }
     }
 
     // END GLOBAL TIMING
     auto end_global = std::chrono::high_resolution_clock::now();
     double total_time = std::chrono::duration<double>(end_global - start_global).count();
 
-    // حساب المجموع الفعلي الصافي لعمليات الفلاتر لمنع أي فروقات طفيفة بسبب الطباعة
+    // calculating the total for the pipeline stages
     double sum_stages = t_gaussian + t_sobel + t_mag_l1 + t_mag_l2 + t_dir + t_nms + t_thresh + t_hyst;
 
     printf("\n==================================================\n");
