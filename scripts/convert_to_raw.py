@@ -2,8 +2,8 @@ from PIL import Image
 import numpy as np
 import os
 
-image_path = "../images/car_original.png"
-raw_path = "../images/car.raw"
+image_path = "images/car_original.png"
+raw_path = "images/car.raw"
 
 try:
     img = Image.open(image_path).convert("L")

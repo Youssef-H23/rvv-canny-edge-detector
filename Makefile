@@ -32,7 +32,7 @@ WIDTH  = 512
 HEIGHT = 341
 
 # ==========================================
-.PHONY: all test host_run canny_rv run sweep show clean
+.PHONY: all test host_run canny_rv run sweep show convert clean 
 
 all: test canny_rv
 
@@ -82,6 +82,9 @@ show:
 	@echo "--- Converting output/raw/*.raw to PNG ---"
 	python3 scripts/show_output.py
 
+convert:
+	@echo "--- Converting to raw---"
+	python3 scripts/convert_to_raw.py
 # --- RULE 7: make clean ---
 clean:
 	rm -rf $(HOST_BUILD_DIR) $(RV_BUILD_DIR)
