@@ -1,0 +1,7 @@
+CompileFlags:
+  Add:
+    - -Icompiler/built_thingy/riscv64-unknown-elf/include/c++/16.1.0
+    - -Icompiler/built_thingy/riscv64-unknown-elf/include/c++/16.1.0/riscv64-unknown-elf
+    - -Icompiler/built_thingy/riscv64-unknown-elf/include
+    - -march=rv64gcv
+    - -menable-experimental-extensions

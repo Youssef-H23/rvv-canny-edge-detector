@@ -11,4 +11,5 @@ build/
 # Editor/OS clutter
 .vscode/
 *.swp
-.DS_Store
+
+output*
