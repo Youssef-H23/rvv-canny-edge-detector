@@ -1,4 +1,3 @@
-THE OLD PRO CODE FIRST ONE
 #include <riscv_vector.h>
 #include <cstdint>
 #include <cstring> // For std::memset
@@ -49,11 +48,11 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output, int width, int 
             // THE MATH: ROW 0 (Kernel Weights: 1, 4, 7, 4, 1)
             // ====================================================================
             // Step A: Load the overlapping 8-bit scoops
-            vuint8m1_t r0_m2 = __riscv_vle8_v(row0 - 2, vl); // Far Left
-            vuint8m1_t r0_m1 = __riscv_vle8_v(row0 - 1, vl); // Mid Left
-            vuint8m1_t r0_0  = __riscv_vle8_v(row0 - 0, vl); // Center
-            vuint8m1_t r0_p1 = __riscv_vle8_v(row0 + 1, vl); // Mid Right
-            vuint8m1_t r0_p2 = __riscv_vle8_v(row0 + 2, vl); // Far Right
+            vuint8m1_t r0_m2 = __riscv_vle8_v_u8m1(row0 - 2, vl); // Far Left
+            vuint8m1_t r0_m1 = __riscv_vle8_v_u8m1(row0 - 1, vl); // Mid Left
+            vuint8m1_t r0_0  = __riscv_vle8_v_u8m1(row0 - 0, vl); // Center
+            vuint8m1_t r0_p1 = __riscv_vle8_v_u8m1(row0 + 1, vl); // Mid Right
+            vuint8m1_t r0_p2 = __riscv_vle8_v_u8m1(row0 + 2, vl); // Far Right
 
             // Step B: Widen pixels to 16-bit, multiply by weight, and add to the 32-bit sum!
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 1, __riscv_vwcvtu_x_x_v_u16m2(r0_m2, vl), vl);
@@ -66,11 +65,11 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output, int width, int 
             // ====================================================================
             // THE MATH: ROW 1 (Kernel Weights: 4, 16, 26, 16, 4)
             // ====================================================================
-            vuint8m1_t r1_m2 = __riscv_vle8_v(row1 - 2, vl);
-            vuint8m1_t r1_m1 = __riscv_vle8_v(row1 - 1, vl);
-            vuint8m1_t r1_0  = __riscv_vle8_v(row1 - 0, vl);
-            vuint8m1_t r1_p1 = __riscv_vle8_v(row1 + 1, vl);
-            vuint8m1_t r1_p2 = __riscv_vle8_v(row1 + 2, vl);
+            vuint8m1_t r1_m2 = __riscv_vle8_v_u8m1(row1 - 2, vl);
+            vuint8m1_t r1_m1 = __riscv_vle8_v_u8m1(row1 - 1, vl);
+            vuint8m1_t r1_0  = __riscv_vle8_v_u8m1(row1 - 0, vl);
+            vuint8m1_t r1_p1 = __riscv_vle8_v_u8m1(row1 + 1, vl);
+            vuint8m1_t r1_p2 = __riscv_vle8_v_u8m1(row1 + 2, vl);
 
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 4,  __riscv_vwcvtu_x_x_v_u16m2(r1_m2, vl), vl);
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 16, __riscv_vwcvtu_x_x_v_u16m2(r1_m1, vl), vl);
@@ -82,11 +81,11 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output, int width, int 
             // ====================================================================
             // THE MATH: ROW 2 - TARGET ROW (Kernel Weights: 7, 26, 41, 26, 7)
             // ====================================================================
-            vuint8m1_t r2_m2 = __riscv_vle8_v(row2 - 2, vl);
-            vuint8m1_t r2_m1 = __riscv_vle8_v(row2 - 1, vl);
-            vuint8m1_t r2_0  = __riscv_vle8_v(row2 - 0, vl);
-            vuint8m1_t r2_p1 = __riscv_vle8_v(row2 + 1, vl);
-            vuint8m1_t r2_p2 = __riscv_vle8_v(row2 + 2, vl);
+            vuint8m1_t r2_m2 = __riscv_vle8_v_u8m1(row2 - 2, vl);
+            vuint8m1_t r2_m1 = __riscv_vle8_v_u8m1(row2 - 1, vl);
+            vuint8m1_t r2_0  = __riscv_vle8_v_u8m1(row2 - 0, vl);
+            vuint8m1_t r2_p1 = __riscv_vle8_v_u8m1(row2 + 1, vl);
+            vuint8m1_t r2_p2 = __riscv_vle8_v_u8m1(row2 + 2, vl);
 
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 7,  __riscv_vwcvtu_x_x_v_u16m2(r2_m2, vl), vl);
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 26, __riscv_vwcvtu_x_x_v_u16m2(r2_m1, vl), vl);
@@ -98,11 +97,11 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output, int width, int 
             // ====================================================================
             // THE MATH: ROW 3 (Kernel Weights: 4, 16, 26, 16, 4)
             // ====================================================================
-            vuint8m1_t r3_m2 = __riscv_vle8_v(row3 - 2, vl);
-            vuint8m1_t r3_m1 = __riscv_vle8_v(row3 - 1, vl);
-            vuint8m1_t r3_0  = __riscv_vle8_v(row3 - 0, vl);
-            vuint8m1_t r3_p1 = __riscv_vle8_v(row3 + 1, vl);
-            vuint8m1_t r3_p2 = __riscv_vle8_v(row3 + 2, vl);
+            vuint8m1_t r3_m2 = __riscv_vle8_v_u8m1(row3 - 2, vl);
+            vuint8m1_t r3_m1 = __riscv_vle8_v_u8m1(row3 - 1, vl);
+            vuint8m1_t r3_0  = __riscv_vle8_v_u8m1(row3 - 0, vl);
+            vuint8m1_t r3_p1 = __riscv_vle8_v_u8m1(row3 + 1, vl);
+            vuint8m1_t r3_p2 = __riscv_vle8_v_u8m1(row3 + 2, vl);
 
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 4,  __riscv_vwcvtu_x_x_v_u16m2(r3_m2, vl), vl);
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 16, __riscv_vwcvtu_x_x_v_u16m2(r3_m1, vl), vl);
@@ -114,11 +113,11 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output, int width, int 
             // ====================================================================
             // THE MATH: ROW 4 (Kernel Weights: 1, 4, 7, 4, 1)
             // ====================================================================
-            vuint8m1_t r4_m2 = __riscv_vle8_v(row4 - 2, vl);
-            vuint8m1_t r4_m1 = __riscv_vle8_v(row4 - 1, vl);
-            vuint8m1_t r4_0  = __riscv_vle8_v(row4 - 0, vl);
-            vuint8m1_t r4_p1 = __riscv_vle8_v(row4 + 1, vl);
-            vuint8m1_t r4_p2 = __riscv_vle8_v(row4 + 2, vl);
+            vuint8m1_t r4_m2 = __riscv_vle8_v_u8m1(row4 - 2, vl);
+            vuint8m1_t r4_m1 = __riscv_vle8_v_u8m1(row4 - 1, vl);
+            vuint8m1_t r4_0  = __riscv_vle8_v_u8m1(row4 - 0, vl);
+            vuint8m1_t r4_p1 = __riscv_vle8_v_u8m1(row4 + 1, vl);
+            vuint8m1_t r4_p2 = __riscv_vle8_v_u8m1(row4 + 2, vl);
 
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 1, __riscv_vwcvtu_x_x_v_u16m2(r4_m2, vl), vl);
             vec_sum = __riscv_vwmaccu_vx_u32m4(vec_sum, 4, __riscv_vwcvtu_x_x_v_u16m2(r4_m1, vl), vl);
@@ -133,13 +132,13 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output, int width, int 
 
             // Convert the huge 32-bit numbers back down into small 8-bit pixels!
             // First, squeeze 32-bit into 16-bit:
-            vuint16m2_t vec_final16 = __riscv_vncvtu_x_x_w_u16m2(vec_final32, vl);
+            vuint16m2_t vec_final16 = __riscv_vncvt_x_x_w_u16m2(vec_final32, vl);
             // Then, squeeze 16-bit into 8-bit:
-            vuint8m1_t  vec_final8  = __riscv_vncvtu_x_x_w_u8m1(vec_final16, vl);
+            vuint8m1_t  vec_final8  = __riscv_vncvt_x_x_w_u8m1(vec_final16, vl);
 
             // 5. STORE THE RESULT
             // Dump the finished 8-bit pixels back into the output row.
-            __riscv_vse8_v(out_row, vec_final8, vl);
+            __riscv_vse8_v_u8m1(out_row, vec_final8, vl);
 
             // 6. ADVANCE THE MACHINE
             // Move all reading glasses and the writing pen forward by 'vl' pixels
@@ -189,17 +188,17 @@ void sobel_gradients_scalar(const uint8_t* input, int16_t* gx, int16_t* gy, int 
             size_t vl = __riscv_vsetvl_e8m1(pixels_left);
 
             // --- STEP A: LOAD 8-BIT PIXELS ---
-            vuint8m1_t r0_m1_8 = __riscv_vle8_v(row0 - 1, vl); // Top-Left
-            vuint8m1_t r0_0_8  = __riscv_vle8_v(row0 - 0, vl); // Top-Center
-            vuint8m1_t r0_p1_8 = __riscv_vle8_v(row0 + 1, vl); // Top-Right
+            vuint8m1_t r0_m1_8 = __riscv_vle8_v_u8m1(row0 - 1, vl); // Top-Left
+            vuint8m1_t r0_0_8  = __riscv_vle8_v_u8m1(row0 - 0, vl); // Top-Center
+            vuint8m1_t r0_p1_8 = __riscv_vle8_v_u8m1(row0 + 1, vl); // Top-Right
 
-            vuint8m1_t r1_m1_8 = __riscv_vle8_v(row1 - 1, vl); // Mid-Left
+            vuint8m1_t r1_m1_8 = __riscv_vle8_v_u8m1(row1 - 1, vl); // Mid-Left
             // (We actually don't need to load the Center pixel! Both Sobel matrices multiply it by 0!)
-            vuint8m1_t r1_p1_8 = __riscv_vle8_v(row1 + 1, vl); // Mid-Right
+            vuint8m1_t r1_p1_8 = __riscv_vle8_v_u8m1(row1 + 1, vl); // Mid-Right
 
-            vuint8m1_t r2_m1_8 = __riscv_vle8_v(row2 - 1, vl); // Bot-Left
-            vuint8m1_t r2_0_8  = __riscv_vle8_v(row2 - 0, vl); // Bot-Center
-            vuint8m1_t r2_p1_8 = __riscv_vle8_v(row2 + 1, vl); // Bot-Right
+            vuint8m1_t r2_m1_8 = __riscv_vle8_v_u8m1(row2 - 1, vl); // Bot-Left
+            vuint8m1_t r2_0_8  = __riscv_vle8_v_u8m1(row2 - 0, vl); // Bot-Center
+            vuint8m1_t r2_p1_8 = __riscv_vle8_v_u8m1(row2 + 1, vl); // Bot-Right
 
             // --- STEP B: WIDEN TO 16-BIT SIGNED INTEGERS ---
             // We widen the 8-bit pixels to 16-bit unsigned, then forcibly reinterpret them as Signed 16-bit.
@@ -249,8 +248,8 @@ void sobel_gradients_scalar(const uint8_t* input, int16_t* gx, int16_t* gy, int 
 
             // --- STEP E: STORE RESULTS ---
             // Dump the finished 16-bit answers back into the output rows
-            __riscv_vse16_v(gx_out, vec_gx, vl);
-            __riscv_vse16_v(gy_out, vec_gy, vl);
+            __riscv_vse16_v_i16m2(gx_out, vec_gx, vl);
+            __riscv_vse16_v_i16m2(gy_out, vec_gy, vl);
 
             // --- STEP F: ADVANCE THE MACHINE ---
             row0 += vl; row1 += vl; row2 += vl;

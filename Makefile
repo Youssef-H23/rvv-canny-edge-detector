@@ -1,8 +1,9 @@
 # ==========================================
 # COMPILER CONFIGURATIONS
 # ==========================================
+TOOLCHAIN_BIN = compiler/built_thingy/bin
 HOST_CXX = g++
-RV_CXX   = riscv64-unknown-elf-g++
+RV_CXX   = $(TOOLCHAIN_BIN)/riscv64-unknown-elf-g++
 
 # Compiler Flags
 HOST_FLAGS = -std=c++17 -Wall -I include
@@ -20,6 +21,7 @@ RV_BUILD_DIR   = build/rv
 
 # Source files
 PIPELINE_SRC = src/canny_scalar.cpp           # shared implementation
+VECTOR_SRC   = src/canny_vector.cpp           # RVV intrinsics (Gaussian + Sobel)
 MAIN_SRC     = src/main.cpp                    # pipeline entry point
 TEST_FILES   = tests/host_tests.cpp
 
@@ -32,7 +34,7 @@ WIDTH  = 512
 HEIGHT = 341
 
 # ==========================================
-.PHONY: all test host_run canny_rv run sweep_VLEN sweep_opt show convert clean 
+.PHONY: all test host_run canny_rv canny_vector run run_vector sweep_VLEN sweep_opt show convert clean 
 
 all: test canny_rv
 
@@ -59,11 +61,23 @@ canny_rv: $(MAIN_SRC) $(PIPELINE_SRC)
 	$(RV_CXX) $(RV_FLAGS) $(MAIN_SRC) -O3 $(PIPELINE_SRC)  -o $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- RISC-V Binary Successfully Compiled ---"
 
+# --- RULE 3b: make canny_vector (RISC-V Cross-Compilation, RVV Intrinsics) ---
+canny_vector: $(MAIN_SRC) $(VECTOR_SRC) $(PIPELINE_SRC)
+	@mkdir -p $(RV_BUILD_DIR)
+	$(RV_CXX) $(RV_FLAGS) -DUSE_RVV -O3 $(MAIN_SRC) $(VECTOR_SRC) $(PIPELINE_SRC) -o $(RV_BUILD_DIR)/canny_vector.elf
+	@echo "--- RISC-V Vector Binary Successfully Compiled ---"
+
 # --- RULE 4: make run (Execute on QEMU) ---
-run: $(RV_BUILD_DIR)/canny_pipeline.elf
+run: canny_rv $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- Launching on QEMU (VLEN=$(VLEN)) ---"
 	qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
 		$(RV_BUILD_DIR)/canny_pipeline.elf $(IMG) $(WIDTH) $(HEIGHT)
+
+# --- RULE 4b: make run_vector (Execute Vector Pipeline on QEMU) ---
+run_vector: canny_vector $(RV_BUILD_DIR)/canny_vector.elf
+	@echo "--- Launching Vector Pipeline on QEMU (VLEN=$(VLEN)) ---"
+	qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
+		$(RV_BUILD_DIR)/canny_vector.elf $(IMG) $(WIDTH) $(HEIGHT)
 
 # --- RULE 5: make sweep (Test multiple VLEN configurations) ---
 sweep_VLEN: $(RV_BUILD_DIR)/canny_pipeline.elf

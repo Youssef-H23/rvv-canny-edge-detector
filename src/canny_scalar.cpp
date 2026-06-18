@@ -78,6 +78,7 @@ template void convolve2D<uint8_t, int32_t, int16_t>(
 // STAGE 1 - GAUSSIAN BLUR
 // ============================================================================
 
+#ifndef USE_RVV
 void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
                           int width, int height) {
     // 5x5 integer Gaussian kernel, coefficients sum to 273 
@@ -140,6 +141,8 @@ void sobel_gradients_scalar(const uint8_t* input,
         }
     }
 }
+
+#endif /* USE_RVV */
 
 // ============================================================================
 // STAGE 3a - GRADIENT MAGNITUDE, L1 NORM
