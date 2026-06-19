@@ -18,6 +18,7 @@
 void gaussian_blur_rvv(const uint8_t* input, uint8_t* output,
                        int width, int height);
 
+void gaussian_blur_rvv_separable(const uint8_t *input, uint8_t *output, int w, int h);
 void sobel_gradients_rvv(const uint8_t* input,
                          int16_t* gx, int16_t* gy,
                          int width, int height);
