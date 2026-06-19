@@ -1,5 +1,4 @@
 #include "../headers/canny_scalar.h"
-
 #include <cstring>   // memset, memcpy
 #include <cmath>     // sqrtf
 #include <cstdio>    // fopen, fread, fclose
@@ -77,11 +76,9 @@ template void convolve2D<uint8_t, int32_t, int16_t>(
 // ============================================================================
 // STAGE 1 - GAUSSIAN BLUR
 // ============================================================================
-
-#ifndef USE_RVV
 void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
                           int width, int height) {
-    // 5x5 integer Gaussian kernel, coefficients sum to 273 
+    // 5x5 integer Gaussian kernel, coefficients sum to 273
     static const int16_t GAUSSIAN_KERNEL[25] = {
         1,  4,  7,  4, 1,
         4, 16, 26, 16, 4,
@@ -94,6 +91,49 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
     convolve2D<uint8_t, int32_t, int16_t>(
         input, output, width, height, GAUSSIAN_KERNEL, 5, GAUSSIAN_SUM);
 }
+
+
+void gaussian_blur_separable_scalar(const uint8_t* input, uint8_t* output,
+                          int width, int height) {
+    static const int16_t H[5] = {1, 4, 7, 4, 1};
+    const int ksum = 273;
+    const int total = width * height;
+
+    int32_t *temp = (int32_t *)aligned_alloc(64, align64(total * sizeof(int32_t)));
+    if (!temp) return;
+
+    // Horizontal pass: 1x5 convolution, sum into int32 temp (no normalization)
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int32_t s = 0;
+            for (int k = -2; k <= 2; ++k) {
+                int ix = x + k;
+                if (ix >= 0 && ix < width)
+                    s += static_cast<int32_t>(input[y * width + ix]) * H[k + 2];
+            }
+            temp[y * width + x] = s;
+        }
+    }
+
+    // Vertical pass: 5x1 convolution, normalize by ksum, clamp to uint8
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int32_t s = 0;
+            for (int k = -2; k <= 2; ++k) {
+                int iy = y + k;
+                if (iy >= 0 && iy < height)
+                    s += temp[iy * width + x] * H[k + 2];
+            }
+            s /= ksum;
+            if (s < 0) s = 0;
+            if (s > 255) s = 255;
+            output[y * width + x] = static_cast<uint8_t>(s);
+        }
+    }
+
+    free(temp);
+}
+
 
 // ============================================================================
 // STAGE 2 - SOBEL GRADIENTS
@@ -142,7 +182,6 @@ void sobel_gradients_scalar(const uint8_t* input,
     }
 }
 
-#endif /* USE_RVV */
 
 // ============================================================================
 // STAGE 3a - GRADIENT MAGNITUDE, L1 NORM
