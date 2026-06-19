@@ -21,8 +21,9 @@ RV_BUILD_DIR   = build/rv
 # Source files
 PIPELINE_SRC = src/canny_scalar.cpp           # shared implementation
 VECTOR_SRC   = src/canny_vector.cpp           # RVV intrinsics (Gaussian + Sobel)
-MAIN_SRC     = src/main.cpp                    # pipeline entry point
+MAIN_SRC     = src/main.cpp                   # pipeline entry point
 TEST_FILES   = tests/host_tests.cpp
+VECTOR_TESTS = tests/vector_tests.cpp
 
 # ==========================================
 # QEMU + IMAGE CONFIGURATIONS
@@ -33,7 +34,7 @@ WIDTH  = 512
 HEIGHT = 341
 
 # ==========================================
-.PHONY: all test host_run canny_rv canny_vector run run_vector sweep_VLEN sweep_opt show convert clean canny_rv_autovec
+.PHONY: all test host_run canny_rv canny_vector run run_vector sweep_VLEN sweep_opt show convert clean canny_rv_autovec vector_test
 
 all: test canny_rv
 
@@ -78,7 +79,21 @@ run_vector: canny_vector $(RV_BUILD_DIR)/canny_vector.elf
 	qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
 		$(RV_BUILD_DIR)/canny_vector.elf $(IMG) $(WIDTH) $(HEIGHT)
 
-# --- RULE 5: make sweep (Test multiple VLEN configurations) ---
+# --- RULE 4c: make vector_test (Build + run equivalence tests on QEMU) ---
+vector_test: $(VECTOR_TESTS) $(PIPELINE_SRC) $(VECTOR_SRC)
+	@mkdir -p $(RV_BUILD_DIR)
+	$(RV_CXX) $(RV_FLAGS) -O2 \
+		$(VECTOR_TESTS) $(PIPELINE_SRC) $(VECTOR_SRC) \
+		-o $(RV_BUILD_DIR)/vector_tests.elf
+	@echo "--- Running Vector Equivalence Tests at VLEN=128 ---"
+	qemu-riscv64 -cpu rv64,v=true,vlen=128  $(RV_BUILD_DIR)/vector_tests.elf
+	@echo "--- Running Vector Equivalence Tests at VLEN=256 ---"
+	qemu-riscv64 -cpu rv64,v=true,vlen=256  $(RV_BUILD_DIR)/vector_tests.elf
+	@echo "--- Running Vector Equivalence Tests at VLEN=512 ---"
+	qemu-riscv64 -cpu rv64,v=true,vlen=512  $(RV_BUILD_DIR)/vector_tests.elf
+	@echo "--- All VLEN Tests Complete ---"
+
+# --- RULE 5: make sweep_VLEN (Test multiple VLEN configurations) ---
 sweep_VLEN: $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- Sweeping VLEN across 128, 256, 512 bits ---"
 	@for v in 128 256 512; do \
@@ -89,7 +104,6 @@ sweep_VLEN: $(RV_BUILD_DIR)/canny_pipeline.elf
 	done
 	@echo "========================================="
 	@echo "--- Sweep Complete ---"
-
 
 # --- RULE 6: make sweep_opt (Test multiple optimization levels) ---
 sweep_opt: $(RV_BUILD_DIR)/canny_pipeline.elf
@@ -108,17 +122,17 @@ sweep_opt: $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "========================================="
 	@echo "--- Sweep Complete ---"
 
-
-
 # --- RULE 7: make show (Convert output/raw/*.raw to PNGs and display) ---
 show:
 	@echo "--- Converting output/raw/*.raw to PNG ---"
 	python3 scripts/show_output.py
+
 # --- RULE 8: make convert (Convert output PNGs back to raw for diffing) ---
 convert:
 	@echo "--- Converting to raw---"
 	python3 scripts/convert_to_raw.py
-# --- RULE 7: make clean ---
+
+# --- RULE 9: make clean ---
 clean:
 	rm -rf $(HOST_BUILD_DIR) $(RV_BUILD_DIR)
-	@echo "--- Workspace Cleaned ---"
+	@echo "--- Workspace Cleaned ---
