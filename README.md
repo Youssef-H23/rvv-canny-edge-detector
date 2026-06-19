@@ -65,25 +65,59 @@ To remove all generated build artifacts, object files, and binaries:
 make clean
 ```
 
-## Phase 4: Compiler Optimization Sweep Results (100 iterations)
+## 📊 Scalar Pipeline Performance Sweep
 
-| Optimization Flag | Execution Time (seconds) | Binary Size |
-| :--- | :--- | :--- |
-| **-O0** | 49.90 | 400 KB |
-| **-O1** | 22.49 | 395 KB |
-| **-O2** | 21.86 | 395 KB |
-| **-O3** | 22.59 | 399 KB |
-
-### Technical Observations on Binary Size:
-* **Code Size Reduction (-O0 to -O1):** The binary size decreased from 400 KB to 395 KB when moving to `-O1` because the compiler eliminated dead code and optimized redundant instructions.
-* **Code Size Increase (-O2 to -O3):** The binary size increased from 395 KB to 399 KB when moving to `-O3` because the compiler aggressively performs loop unrolling and function inlining to prioritize speed, which naturally inflates the file size.
+Below are the detailed profiling results for the *Scalar Pipeline* executed across *100 iterations* using different GCC optimization flags ($O0$ to $Ofast$) on QEMU (VLEN=128).
 
 
-### Phase 4: Auto-Vectorization Report Insights (-O3)
+| Canny Stage / Metric | O0 (No Opt) | O1 (Basic) | O2 (Moderate) | O3 (Aggressive) | Os (Size) | Ofast (Fastest) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| *Stage 1: Gaussian Blur* | 10.0551 s | 3.7758 s | 3.0472 s | *1.0037 s* | 3.8172 s | 1.6852 s |
+| *Stage 2: Sobel Gradients* | 3.9999 s | 8.0955 s | 1.4984 s | 0.2731 s | 2.0920 s | *0.2692 s* |
+| *Stage 3a: Magnitude L1* | 0.6482 s | *0.4519 s* | 1.2092 s | 2.0031 s | 0.4717 s | 1.8362 s |
+| *Stage 3b: Direction* | 0.3594 s | 0.2198 s | *0.2020 s* | 2.1755 s | 0.2474 s | 2.1848 s |
+| *Stage 4: Non-Max Suppression* | 1.1275 s | 0.2822 s | 0.2748 s | 0.2769 s | 0.3032 s | *0.2743 s* |
+| *Stage 5a: Double Threshold* | 0.1710 s | 0.1022 s | *0.0751 s* | 0.3343 s | 0.0956 s | 0.3223 s |
+| *Stage 5b: Hysteresis Tracing* | 0.4370 s | 0.2925 s | 0.4645 s | 0.4656 s | *0.2894 s* | 0.4571 s |
+| *Total Pure Pipeline Time* | *16.7981 s* | *13.2200 s* | *6.7713 s* | *6.5323 s* | *7.3165 s* | *7.0290 s* |
+| *Binary Size (Bytes)* | 410,704 B | *404,232 B* | 404,672 B | 408,696 B | 404,392 B | 408,720 B |
 
-* **What the Compiler Handled:** The compiler successfully auto-vectorized 4 basic loops in `main.cpp` (lines 82, 92, 113, 125) handling simple array operations using RISC-V variable-length vector modes.
-* **Where the Compiler Failed (The Heavy Filters):** In `canny_scalar.cpp` (lines 47, 48, 51), the core image processing loops for Gaussian Blur and Sobel failed to vectorize. The compiler reported constraints like `loop nest containing two or more consecutive inner loops` and `vectorization is not profitable`.
-* **The Takeaway:** Because the compiler struggled with complex loop nesting and memory-clobbering operations, automated optimization is insufficient for the heavy computation stages. This officially justifies the need for Phase 6, where we will manually implement hand-crafted RISC-V Vector (RVV) intrinsics to bypass compiler limitations.
+### 🔍 Architectural Insights & Analysis
+
+1. *The $O3$ Micro-Architectural Paradox:* While $O3$ drastically optimized the *Gaussian Blur* (down to 1.0037 s) and *Sobel* (down to 0.2731 s), a massive performance regression occurred in *Magnitude* and *Direction* stages (jumping up to over 2.0 s). This indicates that GCC's aggressive automatic loop unrolling and auto-vectorization backfired in these specific stages, likely causing severe *Register Spilling* or L1 Instruction Cache thrashing within the emulator. 
+   
+2. *Gaussian Blur Bottleneck Reduction:*
+   The compiler scheduling and instruction-level parallelism under $O3$ achieved a massive *10x speedup* on Stage 1 compared to $O0$, showing that heavy coordinate mapping and stencil loops benefit the most from compiler branch optimization.
+
+3. *Embedded Efficiency (Os flag):*
+   The $Os$ flag successfully reduced the final binary size to *404,392 bytes* (nearly identical to $O1$), while retaining an impressive total execution time of 7.3165 s, making it the most balanced candidate for memory-constrained embedded environments.
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## 👥 Project Supervision & Team
