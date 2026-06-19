@@ -1,8 +1,79 @@
+#include "../headers/canny_vector.h"
+#include "../headers/canny_scalar.h"   // align64
 #include <riscv_vector.h>
-#include "../headers/canny_scalar.h"
 #include <cstdint>
-#include <cstring>
-#include <cstdlib>
+#include <cstdlib>   // aligned_alloc, free
+#include <cstring>   // memset
+
+// ============================================================================
+// STAGE 1 - GAUSSIAN BLUR (RISC-V VECTORIZED)
+//
+// Self-contained 5x5 convolution (no separate convolve2D_rvv helper):
+// multiply-accumulate a 5x5 neighborhood per pixel, then normalize. The outer
+// loops (kernel row ky, kernel column kx) stay scalar -- ksize*ksize is only
+// 25, so there's nothing to gain vectorizing them. What repeats over every
+// output pixel is the inner load/widen/multiply-accumulate, so that's the
+// part that's vectorized.
+//
+// Normalization is a fixed-point multiply-shift, (sum * 240) >> 16, instead
+// of a real divide (65536/273 ~= 240, approximating sum / 273): the divisor
+// is a compile-time constant, but a vector integer divide is a real per-lane
+// instruction with no constant-divisor strength reduction (unlike scalar
+// sum/divisor, which GCC turns into multiply+shift automatically), and it is
+// slow under QEMU's emulation.
+//
+// Border handling: not implemented yet. The output is pre-zeroed and only
+// pixels at least `radius` away from every edge are computed, matching the
+// project guide's "interior first" hint for Phase 6.
+// ============================================================================
+void gaussian_blur_rvv(const uint8_t* input, uint8_t* output, int width, int height) {
+    static const int16_t GAUSSIAN_KERNEL[25] = {
+        1,  4,  7,  4, 1,
+        4, 16, 26, 16, 4,
+        7, 26, 41, 26, 7,
+        4, 16, 26, 16, 4,
+        1,  4,  7,  4, 1
+    };
+    const int ksize       = 5;
+    const int radius      = ksize / 2;
+    const uint32_t fixed_mul   = 240;  // fixed-point numerator
+    const uint32_t fixed_shift = 16;   // right-shift amount
+
+    std::memset(output, 0, (size_t)width * height);
+
+    for (int y = radius; y < height - radius; ++y) {
+        int x = radius;
+        int pixels_left = width - 2 * radius;
+
+        while (pixels_left > 0) {
+            size_t vl = __riscv_vsetvl_e8m2(pixels_left);
+            vuint32m8_t vec_sum = __riscv_vmv_v_x_u32m8(0, vl);
+
+            for (int ky = -radius; ky <= radius; ++ky) {
+                const uint8_t* row = input + (size_t)(y + ky) * width + x; // points to the first pixel of the current kernel row
+                for (int kx = -radius; kx <= radius; ++kx) {
+                    int16_t weight = GAUSSIAN_KERNEL[(ky + radius) * ksize + (kx + radius)];
+                    if (weight == 0) continue;   // no need to load/multiply/accumulate if the weight is 0
+
+                    vuint8m2_t pix    = __riscv_vle8_v_u8m2(row + kx, vl);
+                    vuint16m4_t pix16 = __riscv_vwcvtu_x_x_v_u16m4(pix, vl);
+                    vec_sum = __riscv_vwmaccu_vx_u32m8(vec_sum, (uint16_t)weight, pix16, vl);
+                }
+            }
+
+            vuint32m8_t normalized = __riscv_vsrl_vx_u32m8(
+                __riscv_vmul_vx_u32m8(vec_sum, fixed_mul, vl), fixed_shift, vl);
+            vuint16m4_t n16 = __riscv_vncvt_x_x_w_u16m4(normalized, vl);
+            vuint8m2_t  n8  = __riscv_vncvt_x_x_w_u8m2(n16, vl);
+            __riscv_vse8_v_u8m2(output + (size_t)y * width + x, n8, vl);
+
+            x += (int)vl;
+            pixels_left -= (int)vl;
+        }
+    }
+}
+
+
 
 // ============================================================================
 // STAGE 1 - GAUSSIAN BLUR (SEPARABLE FILTER, RISC-V VECTORIZED)
@@ -11,7 +82,7 @@
 // Horizontal pass: accumulate 5 horizontal neighbors into int32 temp buffer.
 // Vertical pass:   accumulate 5 vertical neighbors from temp, normalize to u8.
 // This reduces MACs from 25 to 10 and eliminates LMUL=4 register pressure.
-void gaussian_blur_scalar(const uint8_t *input, uint8_t *output, int w, int h) {
+void gaussian_blur_rvv_separable(const uint8_t *input, uint8_t *output, int w, int h) {
     static const int16_t K[5] = {1, 4, 7, 4, 1};
     const int ksum = 273;
 
@@ -106,13 +177,14 @@ void gaussian_blur_scalar(const uint8_t *input, uint8_t *output, int w, int h) {
     free(temp);
 }
 
+
 // ============================================================================
 // STAGE 2 - SOBEL GRADIENTS (RISC-V VECTORIZED)
 // ============================================================================
 static const int KX[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
 static const int KY[3][3] = {{-1,-2,-1}, { 0, 0, 0}, { 1, 2, 1}};
 
-void sobel_gradients_scalar(const uint8_t *input, int16_t *gx, int16_t *gy, int w, int h) {
+void sobel_gradients_rvv(const uint8_t *input, int16_t *gx, int16_t *gy, int w, int h) {
 
     std::memset(gx, 0, w * h * sizeof(int16_t));
     std::memset(gy, 0, w * h * sizeof(int16_t));
@@ -190,4 +262,73 @@ void sobel_gradients_scalar(const uint8_t *input, int16_t *gx, int16_t *gy, int 
             gy[y * w + x] = (int16_t)sgy;
         }
     }
+}
+
+// ============================================================================
+// STAGE 3a - GRADIENT MAGNITUDE, L1 NORM (RISC-V VECTORIZED)
+//
+// New RVV concept: vector reduction (project guide section 6.5). Pass 1
+// computes |gx|+|gy| per element and folds a running global maximum into a
+// scalar via __riscv_vredmaxu_vs -- a reduction collapses a vector down to
+// one value, written into element 0 of an m1 destination register, and
+// extracted with __riscv_vmv_x_s. The seed passed into each chunk's
+// reduction is the running max so far, so the maximum survives across
+// strip-mined chunks. Pass 2 normalizes every element by that global max,
+// exactly like compute_magnitude_l1_scalar's two-pass approach.
+// ============================================================================
+void compute_magnitude_l1_rvv(const int16_t* gx, const int16_t* gy,
+                              uint8_t* magnitude, int width, int height) {
+    int total = width * height;
+    uint16_t* raw = (uint16_t*)aligned_alloc(64, align64(total * sizeof(uint16_t)));
+
+    // ---- Pass 1: |gx| + |gy|, tracking the global max in a vector register ----
+    vuint16m1_t running_max = __riscv_vmv_s_x_u16m1(0, 1);
+
+    int i = 0;
+    while (i < total) {
+        size_t vl = __riscv_vsetvl_e16m4(total - i);
+
+        vint16m4_t vgx = __riscv_vle16_v_i16m4(gx + i, vl);
+        vint16m4_t vgy = __riscv_vle16_v_i16m4(gy + i, vl);
+
+        // |x| = max(x, -x). Sum fits comfortably in int16 (max 1020+1020=2040).
+        vint16m4_t abs_gx = __riscv_vmax_vv_i16m4(vgx, __riscv_vneg_v_i16m4(vgx, vl), vl);
+        vint16m4_t abs_gy = __riscv_vmax_vv_i16m4(vgy, __riscv_vneg_v_i16m4(vgy, vl), vl);
+        vint16m4_t mag    = __riscv_vadd_vv_i16m4(abs_gx, abs_gy, vl);
+        vuint16m4_t umag  = __riscv_vreinterpret_v_i16m4_u16m4(mag);
+
+        __riscv_vse16_v_u16m4(raw + i, umag, vl);
+
+        // Fold this chunk's max into the running max (the seed carries the
+        // previous chunks' max forward, so it survives the whole image).
+        running_max = __riscv_vredmaxu_vs_u16m4_u16m1(umag, running_max, vl);
+
+        i += (int)vl;
+    }
+
+    uint16_t max_mag = __riscv_vmv_x_s_u16m1_u16(running_max);
+
+    // ---- Pass 2: normalize to [0, 255] ----
+    if (max_mag == 0) {
+        std::memset(magnitude, 0, total);
+        free(raw);
+        return;
+    }
+
+    i = 0;
+    while (i < total) {
+        size_t vl = __riscv_vsetvl_e16m4(total - i);
+
+        vuint16m4_t vraw   = __riscv_vle16_v_u16m4(raw + i, vl);
+        vuint32m8_t vraw32 = __riscv_vwcvtu_x_x_v_u32m8(vraw, vl);
+        vuint32m8_t scaled = __riscv_vmul_vx_u32m8(vraw32, 255, vl);
+        vuint32m8_t norm32 = __riscv_vdivu_vx_u32m8(scaled, max_mag, vl);
+        vuint16m4_t norm16 = __riscv_vncvt_x_x_w_u16m4(norm32, vl);
+        vuint8m2_t  norm8  = __riscv_vncvt_x_x_w_u8m2(norm16, vl);
+
+        __riscv_vse8_v_u8m2(magnitude + i, norm8, vl);
+        i += (int)vl;
+    }
+
+    free(raw);
 }

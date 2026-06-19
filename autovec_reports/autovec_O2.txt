@@ -1,0 +1,539 @@
+src/main.cpp:33:23: missed: statement clobbers memory: _16 = _openat (-100, pathname_13(D), linux_flags_6, mode_14(D));
+src/main.cpp:33:57: note: ***** Analysis failed with vector mode VOID
+src/main.cpp:84:29: missed: couldn't vectorize loop
+src/main.cpp:87:58: missed: statement clobbers memory: s1 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:37:5: note: vectorized 0 loops in function.
+src/main.cpp:46:22: missed: statement clobbers memory: width_48 = atoi (_7);
+src/main.cpp:47:22: missed: statement clobbers memory: height_50 = atoi (_8);
+src/main.cpp:51:36: missed: statement clobbers memory: _53 = load_raw_image (input_path_46, width_48, height_50);
+src/main.cpp:58:47: missed: statement clobbers memory: blurred_56 = aligned_alloc (64, _54);
+src/main.cpp:59:47: missed: statement clobbers memory: gx_59 = aligned_alloc (64, _60);
+src/main.cpp:60:47: missed: statement clobbers memory: gy_62 = aligned_alloc (64, _60);
+src/main.cpp:61:47: missed: statement clobbers memory: mag_l1_65 = aligned_alloc (64, _54);
+src/main.cpp:62:47: missed: statement clobbers memory: dir_67 = aligned_alloc (64, _54);
+src/main.cpp:63:47: missed: statement clobbers memory: nms_69 = aligned_alloc (64, _54);
+src/main.cpp:64:47: missed: statement clobbers memory: labels_71 = aligned_alloc (64, _54);
+src/main.cpp:65:47: missed: statement clobbers memory: edges_73 = aligned_alloc (64, _54);
+src/main.cpp:81:64: missed: statement clobbers memory: start_global = std::chrono::_V2::system_clock::now ();
+src/main.cpp:87:58: missed: statement clobbers memory: s1 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:91:29: missed: statement clobbers memory: gaussian_blur_scalar (_53, blurred_56, width_48, height_50);
+src/main.cpp:93:58: missed: statement clobbers memory: e1 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:98:58: missed: statement clobbers memory: s2 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:102:31: missed: statement clobbers memory: sobel_gradients_scalar (blurred_56, gx_59, gy_62, width_48, height_50);
+src/main.cpp:104:58: missed: statement clobbers memory: e2 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:108:60: missed: statement clobbers memory: s3a1 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:112:36: missed: statement clobbers memory: compute_magnitude_l1_scalar (gx_59, gy_62, mag_l1_65, width_48, height_50);
+src/main.cpp:114:60: missed: statement clobbers memory: e3a1 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:118:59: missed: statement clobbers memory: s3b = std::chrono::_V2::system_clock::now ();
+src/main.cpp:119:33: missed: statement clobbers memory: compute_direction_scalar (gx_59, gy_62, dir_67, width_48, height_50);
+src/main.cpp:120:59: missed: statement clobbers memory: e3b = std::chrono::_V2::system_clock::now ();
+src/main.cpp:133:58: missed: statement clobbers memory: s4 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:134:39: missed: statement clobbers memory: non_maximum_suppression_scalar (mag_l1_65, dir_67, nms_69, width_48, height_50);
+src/main.cpp:135:58: missed: statement clobbers memory: e4 = std::chrono::_V2::system_clock::now ();
+src/main.cpp:139:59: missed: statement clobbers memory: s5a = std::chrono::_V2::system_clock::now ();
+src/main.cpp:140:32: missed: statement clobbers memory: double_threshold_scalar (nms_69, labels_71, width_48, height_50, 20, 80);
+src/main.cpp:141:59: missed: statement clobbers memory: e5a = std::chrono::_V2::system_clock::now ();
+src/main.cpp:145:59: missed: statement clobbers memory: s5b = std::chrono::_V2::system_clock::now ();
+src/main.cpp:146:26: missed: statement clobbers memory: hysteresis_scalar (labels_71, edges_73, width_48, height_50);
+src/main.cpp:147:59: missed: statement clobbers memory: e5b = std::chrono::_V2::system_clock::now ();
+src/main.cpp:152:62: missed: statement clobbers memory: end_global = std::chrono::_V2::system_clock::now ();
+src/main.cpp:158:11: missed: statement clobbers memory: __builtin_puts (&"\n=================================================="[0]);
+src/main.cpp:159:11: missed: statement clobbers memory: __builtin_puts (&"         PROFILING RESULTS (100 Iterations)        "[0]);
+src/main.cpp:160:11: missed: statement clobbers memory: __builtin_puts (&"=================================================="[0]);
+src/main.cpp:161:11: missed: statement clobbers memory: __builtin_puts (&"Stage                           | Time (s) | Break Down "[0]);
+src/main.cpp:162:11: missed: statement clobbers memory: __builtin_puts (&"--------------------------------------------------"[0]);
+src/main.cpp:163:11: missed: statement clobbers memory: printf ("Stage 1: Gaussian Blur          | %8.4f | %5.1f%%\n", t_gaussian_218, _19);
+src/main.cpp:164:11: missed: statement clobbers memory: printf ("Stage 2: Sobel Gradients        | %8.4f | %5.1f%%\n", t_sobel_216, _21);
+src/main.cpp:165:11: missed: statement clobbers memory: printf ("Stage 3a: Magnitude L1          | %8.4f | %5.1f%%\n", t_mag_l1_214, _23);
+src/main.cpp:166:11: missed: statement clobbers memory: printf ("Stage 3b: Direction             | %8.4f | %5.1f%%\n", t_dir_212, _25);
+src/main.cpp:167:11: missed: statement clobbers memory: printf ("Stage 4: Non-Max Suppression    | %8.4f | %5.1f%%\n", t_nms_210, _27);
+src/main.cpp:168:11: missed: statement clobbers memory: printf ("Stage 5a: Double Threshold      | %8.4f | %5.1f%%\n", t_thresh_208, _29);
+src/main.cpp:169:11: missed: statement clobbers memory: printf ("Stage 5b: Hysteresis Tracing    | %8.4f | %5.1f%%\n", t_hyst_206, _31);
+src/main.cpp:170:11: missed: statement clobbers memory: __builtin_puts (&"--------------------------------------------------"[0]);
+src/main.cpp:171:11: missed: statement clobbers memory: printf ("Total Pure Pipeline Time        | %8.4f seconds\n", sum_stages_77);
+src/main.cpp:172:11: missed: statement clobbers memory: printf ("Total Execution Time (w/ IO)    | %8.4f seconds\n", _193);
+src/main.cpp:173:11: missed: statement clobbers memory: __builtin_puts (&"=================================================="[0]);
+src/main.cpp:177:19: missed: statement clobbers memory: save_raw_image ("output/raw/output_blurred.raw", blurred_56, width_48, height_50);
+src/main.cpp:178:19: missed: statement clobbers memory: save_raw_image ("output/raw/output_magnitude_l1.raw", mag_l1_65, width_48, height_50);
+src/main.cpp:179:19: missed: statement clobbers memory: save_raw_image ("output/raw/output_direction.raw", dir_67, width_48, height_50);
+src/main.cpp:180:19: missed: statement clobbers memory: save_raw_image ("output/raw/output_nms.raw", nms_69, width_48, height_50);
+src/main.cpp:181:19: missed: statement clobbers memory: save_raw_image ("output/raw/output_edges.raw", edges_73, width_48, height_50);
+src/main.cpp:184:9: missed: statement clobbers memory: free (_53);
+src/main.cpp:184:22: missed: statement clobbers memory: free (blurred_56);
+src/main.cpp:184:37: missed: statement clobbers memory: free (gx_59);
+src/main.cpp:184:47: missed: statement clobbers memory: free (gy_62);
+src/main.cpp:185:9: missed: statement clobbers memory: free (mag_l1_65);
+src/main.cpp:185:23: missed: statement clobbers memory: free (dir_67);
+src/main.cpp:186:9: missed: statement clobbers memory: free (nms_69);
+src/main.cpp:186:20: missed: statement clobbers memory: free (labels_71);
+src/main.cpp:186:34: missed: statement clobbers memory: free (edges_73);
+src/main.cpp:188:11: missed: statement clobbers memory: __builtin_puts (&"\nDone."[0]);
+src/main.cpp:53:16: missed: statement clobbers memory: fprintf (_10, "Error: could not open \'%s\'\n", input_path_46);
+src/main.cpp:40:16: missed: statement clobbers memory: fprintf (_2, "Usage: %s <input.raw> <width> <height>\n", _3);
+src/main.cpp:41:16: missed: statement clobbers memory: fprintf (_5, "Example: %s images/input.raw 512 512\n", _6);
+src/main.cpp:37:5: note: ***** Analysis failed with vector mode RVVM1DI
+src/main.cpp:37:5: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1DI
+src/canny_scalar.cpp:13:43: missed: statement clobbers memory: buf_11 = aligned_alloc (64, _18);
+src/canny_scalar.cpp:16:20: missed: statement clobbers memory: _14 = fopen (path_12(D), "rb");
+src/canny_scalar.cpp:22:10: missed: statement clobbers memory: fread (buf_11, 1, _1, _14);
+src/canny_scalar.cpp:23:11: missed: statement clobbers memory: fclose (_14);
+src/canny_scalar.cpp:18:13: missed: statement clobbers memory: free (buf_11);
+src/canny_scalar.cpp:18:13: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:28:20: missed: statement clobbers memory: _8 = fopen (path_6(D), "wb");
+src/canny_scalar.cpp:31:11: missed: statement clobbers memory: fwrite (data_11(D), 1, _2, _8);
+src/canny_scalar.cpp:32:11: missed: statement clobbers memory: fclose (_8);
+src/canny_scalar.cpp:32:11: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:47:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:47:23: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:48:27: missed: couldn't vectorize loop
+src/canny_scalar.cpp:48:27: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:51:39: missed: couldn't vectorize loop
+src/canny_scalar.cpp:51:39: missed: not vectorized: Bad inner loop.
+src/canny_scalar.cpp:52:43: missed: couldn't vectorize loop
+src/canny_scalar.cpp:52:43: missed: not vectorized: unsupported data-type
+src/canny_scalar.cpp:41:6: note: vectorized 0 loops in function.
+src/canny_scalar.cpp:41:6: missed: splitting region at dont-vectorize loop 6 entry at bb32
+src/canny_scalar.cpp:51:39: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:51:39: missed: splitting region at loop 7 exit at bb40
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode RVVM1HI
+src/canny_scalar.cpp:57:59: note: ***** The result for vector mode RVVM1QI would be the same
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode RVVMF2QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode RVVMF2QI
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode RVVMF4QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode RVVMF4QI
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode RVVMF8QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode RVVMF8QI
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode V16QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode V16QI
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode V8QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode V8QI
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode V4QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode V4QI
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode V2QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode V2QI
+src/canny_scalar.cpp:57:59: note: ***** Re-trying analysis with vector mode V1QI
+src/canny_scalar.cpp:57:59: note: ***** Analysis failed with vector mode V1QI
+src/canny_scalar.cpp:57:59: missed: splitting region at dominance boundary bb13
+src/canny_scalar.cpp:68:35: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:68:35: missed: splitting region at loop 2 exit at bb26
+src/canny_scalar.cpp:48:27: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:48:27: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1QI
+src/canny_scalar.cpp:48:27: missed: splitting region at dominance boundary bb14
+src/canny_scalar.cpp:48:27: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:48:27: missed: splitting region at loop 1 exit at bb27
+src/canny_scalar.cpp:47:23: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:47:23: missed: splitting region at dominance boundary bb16
+src/canny_scalar.cpp:47:23: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:71:1: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:105:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:105:23: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:106:27: missed: couldn't vectorize loop
+src/canny_scalar.cpp:106:27: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:108:32: optimized: loop vectorized using variable length vectors
+src/canny_scalar.cpp:92:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:92:23: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:93:27: missed: couldn't vectorize loop
+src/canny_scalar.cpp:98:67: missed: not vectorized: data ref analysis failed: _10 = .MASK_LOAD (_9, 8B, _5, 0);
+src/canny_scalar.cpp:95:32: optimized: loop vectorized using variable length vectors
+src/canny_scalar.cpp:82:6: note: vectorized 2 loops in function.
+src/canny_scalar.cpp:82:6: missed: splitting region at dont-vectorize loop 9 entry at bb52
+src/canny_scalar.cpp:88:45: missed: statement clobbers memory: temp_61 = aligned_alloc (64, _78);
+src/canny_scalar.cpp:100:20: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:100:20: missed: splitting region at dominance boundary bb9
+src/canny_scalar.cpp:100:20: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:100:20: missed: splitting region at loop 1 exit at bb25
+src/canny_scalar.cpp:92:23: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:92:23: missed: splitting region at dominance boundary bb23
+src/canny_scalar.cpp:82:6: missed: statement clobbers memory: vect_patt_177.91_146 = .MASK_LEN_GATHER_LOAD (_126, vect__25.90_144, 4, { 0, ... }, mask__23.86_145, _217(D), _139, 0);
+src/canny_scalar.cpp:111:56: missed: statement clobbers memory: vect__31.95_205 = .MASK_LEN_LOAD (&H, 16B, { -1, ... }, _223(D), _139, 0);
+src/canny_scalar.cpp:82:6: missed: statement clobbers memory: vect_patt_177.91_218 = .MASK_LEN_GATHER_LOAD (_126, vect__25.90_216, 4, { 0, ... }, mask__23.86_210, _217(D), _235, 0);
+src/canny_scalar.cpp:111:56: missed: statement clobbers memory: vect__31.95_224 = .MASK_LEN_LOAD (vectp_H.93_87, 16B, { -1, ... }, _223(D), _235, 0);
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:116:30: note: ***** The result for vector mode RVVM1QI would be the same
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode RVVMF2QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode RVVMF2QI
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode RVVMF4QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode RVVMF4QI
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode RVVMF8QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode RVVMF8QI
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode V16QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode V16QI
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode V8QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode V8QI
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode V4QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode V4QI
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode V2QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode V2QI
+src/canny_scalar.cpp:116:30: note: ***** Re-trying analysis with vector mode V1QI
+src/canny_scalar.cpp:116:30: note: ***** Analysis failed with vector mode V1QI
+src/canny_scalar.cpp:116:30: missed: splitting region at dominance boundary bb24
+src/canny_scalar.cpp:120:9: missed: statement clobbers memory: free (temp_61);
+src/canny_scalar.cpp:120:9: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:120:9: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:144:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:144:23: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:145:27: missed: couldn't vectorize loop
+src/canny_scalar.cpp:145:27: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:149:34: missed: couldn't vectorize loop
+src/canny_scalar.cpp:156:54: missed: not vectorized: data ref analysis failed: _11 = .MASK_LOAD (_10, 8B, _29, 0);
+src/canny_scalar.cpp:150:38: missed: couldn't vectorize loop
+src/canny_scalar.cpp:150:38: missed: not vectorized: unsupported data-type
+src/canny_scalar.cpp:127:6: note: vectorized 0 loops in function.
+src/canny_scalar.cpp:127:6: missed: splitting region at dont-vectorize loop 6 entry at bb29
+src/canny_scalar.cpp:163:25: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:163:25: missed: splitting region at loop 7 exit at bb37
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:156:50: note: ***** The result for vector mode RVVM1QI would be the same
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode RVVMF2QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode RVVMF2QI
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode RVVMF4QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode RVVMF4QI
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode RVVMF8QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode RVVMF8QI
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode V16QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode V16QI
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode V8QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode V8QI
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode V4QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode V4QI
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode V2QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode V2QI
+src/canny_scalar.cpp:156:50: note: ***** Re-trying analysis with vector mode V1QI
+src/canny_scalar.cpp:156:50: note: ***** Analysis failed with vector mode V1QI
+src/canny_scalar.cpp:156:50: missed: splitting region at loop 2 exit at bb23
+src/canny_scalar.cpp:145:27: note: ***** Analysis failed with vector mode RVVM1HI
+src/canny_scalar.cpp:145:27: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1HI
+src/canny_scalar.cpp:145:27: missed: splitting region at dominance boundary bb11
+src/canny_scalar.cpp:145:27: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:145:27: missed: splitting region at loop 1 exit at bb24
+src/canny_scalar.cpp:144:23: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:144:23: missed: splitting region at dominance boundary bb14
+src/canny_scalar.cpp:144:23: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:168:1: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:195:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:195:23: missed: not vectorized: unsupported data-type
+src/canny_scalar.cpp:186:23: optimized: loop vectorized using variable length vectors
+src/canny_scalar.cpp:176:6: note: vectorized 1 loops in function.
+src/canny_scalar.cpp:182:43: missed: statement clobbers memory: raw_34 = aligned_alloc (64, _47);
+src/canny_scalar.cpp:187:47: missed: statement clobbers memory: vect__6.209_140 = .MASK_LEN_LOAD (vectp_gx.207_137, 16B, { -1, ... }, _139(D), _162, 0);
+src/canny_scalar.cpp:188:47: missed: statement clobbers memory: vect__10.214_147 = .MASK_LEN_LOAD (vectp_gy.212_144, 16B, { -1, ... }, _146(D), _162, 0);
+src/canny_scalar.cpp:190:16: missed: statement clobbers memory: .MASK_LEN_STORE (vectp_raw.218_152, 32B, { -1, ... }, _162, 0, vect_mag_44.217_150);
+src/canny_scalar.cpp:199:9: missed: statement clobbers memory: free (raw_34);
+src/canny_scalar.cpp:200:1: note: ***** Analysis failed with vector mode RVVM1SI
+src/canny_scalar.cpp:200:1: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1SI
+src/canny_scalar.cpp:225:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:225:23: missed: not vectorized: unsupported data-type
+src/canny_scalar.cpp:216:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:206:6: missed: not vectorized: unsupported use in stmt.
+src/canny_scalar.cpp:206:6: note: vectorized 0 loops in function.
+src/canny_scalar.cpp:212:39: missed: statement clobbers memory: raw_36 = aligned_alloc (64, _50);
+src/canny_scalar.cpp:229:9: missed: statement clobbers memory: free (raw_36);
+src/canny_scalar.cpp:230:1: note: ***** Analysis failed with vector mode RVVM1HI
+src/canny_scalar.cpp:230:1: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1HI
+src/canny_scalar.cpp:241:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:241:23: missed: not vectorized: unsupported data-type
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode RVVM1HI
+src/canny_scalar.cpp:236:6: note: ***** The result for vector mode RVVM1QI would be the same
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode RVVMF2QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode RVVMF2QI
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode RVVMF4QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode RVVMF4QI
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode RVVMF8QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode RVVMF8QI
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode V16QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode V16QI
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode V8QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode V8QI
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode V4QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode V4QI
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode V2QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode V2QI
+src/canny_scalar.cpp:236:6: note: ***** Re-trying analysis with vector mode V1QI
+src/canny_scalar.cpp:236:6: note: ***** Analysis failed with vector mode V1QI
+src/canny_scalar.cpp:236:6: note: vectorized 0 loops in function.
+src/canny_scalar.cpp:253:1: note: ***** Analysis failed with vector mode RVVM1HI
+src/canny_scalar.cpp:253:1: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1HI
+src/canny_scalar.cpp:266:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:266:23: missed: not vectorized: unsupported control flow in loop.
+src/canny_scalar.cpp:267:27: missed: couldn't vectorize loop
+src/canny_scalar.cpp:267:27: missed: not vectorized: unsupported control flow in loop.
+src/canny_scalar.cpp:259:6: note: vectorized 0 loops in function.
+src/canny_scalar.cpp:263:16: missed: statement clobbers memory: memset (output_56(D), 0, _2);
+src/canny_scalar.cpp:259:6: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:259:6: note: ***** The result for vector mode RVVM1QI would be the same
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode RVVMF2QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis failed with vector mode RVVMF2QI
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode RVVMF4QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis failed with vector mode RVVMF4QI
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode RVVMF8QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis failed with vector mode RVVMF8QI
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode V16QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis succeeded with vector mode V16QI
+src/canny_scalar.cpp:259:6: note: SLPing BB part
+src/canny_scalar.cpp:259:6: note: Costing subgraph: 
+src/canny_scalar.cpp:259:6: note: node 0x26deb0f8 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_49 = PHI <n2_64(9), n2_70(6), n2_66(7), n2_68(8)>
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb188 0x26deb338 0x26deb458 0x26deb608
+src/canny_scalar.cpp:259:6: note: node 0x26deb188 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_64 = (int) _42;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb2a8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb2a8 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _37, _42 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb338 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_70 = (int) _15;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb3c8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb3c8 (max_nunits=2, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	stmt 0 _11 = *_10;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 _15 = *_14;
+src/canny_scalar.cpp:259:6: note: node 0x26deb458 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_66 = (int) _23;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb578
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb578 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _19, _23 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb608 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_68 = (int) _32;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb728
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb728 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _27, _32 }
+src/canny_scalar.cpp:259:6: note: Cost model analysis: 
+src/canny_scalar.cpp:259:6: note: Cost model analysis for part in loop 2:
+  Vector cost: 34
+  Scalar cost: 11
+src/canny_scalar.cpp:259:6: missed: not vectorized: vectorization is not profitable.
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode V8QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis succeeded with vector mode V8QI
+src/canny_scalar.cpp:259:6: note: SLPing BB part
+src/canny_scalar.cpp:259:6: note: Costing subgraph: 
+src/canny_scalar.cpp:259:6: note: node 0x26deb608 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_49 = PHI <n2_64(9), n2_70(6), n2_66(7), n2_68(8)>
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb728 0x26deb338 0x26deb188 0x26deb698
+src/canny_scalar.cpp:259:6: note: node 0x26deb728 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_64 = (int) _42;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb578
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb578 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _37, _42 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb338 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_70 = (int) _15;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb3c8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb3c8 (max_nunits=2, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	stmt 0 _11 = *_10;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 _15 = *_14;
+src/canny_scalar.cpp:259:6: note: node 0x26deb188 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_66 = (int) _23;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb4e8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb4e8 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _19, _23 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb698 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_68 = (int) _32;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb218
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb218 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _27, _32 }
+src/canny_scalar.cpp:259:6: note: Cost model analysis: 
+src/canny_scalar.cpp:259:6: note: Cost model analysis for part in loop 2:
+  Vector cost: 34
+  Scalar cost: 11
+src/canny_scalar.cpp:259:6: missed: not vectorized: vectorization is not profitable.
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode V4QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis succeeded with vector mode V4QI
+src/canny_scalar.cpp:259:6: note: SLPing BB part
+src/canny_scalar.cpp:259:6: note: Costing subgraph: 
+src/canny_scalar.cpp:259:6: note: node 0x26deb698 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_49 = PHI <n2_64(9), n2_70(6), n2_66(7), n2_68(8)>
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb218 0x26deb338 0x26deb728 0x26deb068
+src/canny_scalar.cpp:259:6: note: node 0x26deb218 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_64 = (int) _42;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb4e8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb4e8 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _37, _42 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb338 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_70 = (int) _15;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb3c8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb3c8 (max_nunits=2, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	stmt 0 _11 = *_10;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 _15 = *_14;
+src/canny_scalar.cpp:259:6: note: node 0x26deb728 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_66 = (int) _23;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb2a8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb2a8 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _19, _23 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb068 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_68 = (int) _32;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb458
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb458 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _27, _32 }
+src/canny_scalar.cpp:259:6: note: Cost model analysis: 
+src/canny_scalar.cpp:259:6: note: Cost model analysis for part in loop 2:
+  Vector cost: 34
+  Scalar cost: 11
+src/canny_scalar.cpp:259:6: missed: not vectorized: vectorization is not profitable.
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode V2QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis succeeded with vector mode V2QI
+src/canny_scalar.cpp:259:6: note: SLPing BB part
+src/canny_scalar.cpp:259:6: note: Costing subgraph: 
+src/canny_scalar.cpp:259:6: note: node 0x26deb068 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_49 = PHI <n2_64(9), n2_70(6), n2_66(7), n2_68(8)>
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb458 0x26deb338 0x26deb218 0x26deb0f8
+src/canny_scalar.cpp:259:6: note: node 0x26deb458 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_64 = (int) _42;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb2a8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb2a8 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _37, _42 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb338 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_70 = (int) _15;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb3c8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb3c8 (max_nunits=2, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	stmt 0 _11 = *_10;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 _15 = *_14;
+src/canny_scalar.cpp:259:6: note: node 0x26deb218 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_66 = (int) _23;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb578
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb578 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _19, _23 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb0f8 (max_nunits=2, refcnt=1) vector(2) int
+src/canny_scalar.cpp:259:6: note: op template: n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_68 = (int) _32;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb188
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb188 (max_nunits=1, refcnt=1) vector(2) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _27, _32 }
+src/canny_scalar.cpp:259:6: note: Cost model analysis: 
+src/canny_scalar.cpp:259:6: note: Cost model analysis for part in loop 2:
+  Vector cost: 34
+  Scalar cost: 11
+src/canny_scalar.cpp:259:6: missed: not vectorized: vectorization is not profitable.
+src/canny_scalar.cpp:259:6: note: ***** Re-trying analysis with vector mode V1QI
+src/canny_scalar.cpp:259:6: note: ***** Analysis succeeded with vector mode V1QI
+src/canny_scalar.cpp:259:6: note: SLPing BB part
+src/canny_scalar.cpp:259:6: note: Costing subgraph: 
+src/canny_scalar.cpp:259:6: note: node 0x26deb0f8 (max_nunits=1, refcnt=1) vector(1) int
+src/canny_scalar.cpp:259:6: note: op template: n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_48 = PHI <n1_63(9), n1_69(6), n1_65(7), n1_67(8)>
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_49 = PHI <n2_64(9), n2_70(6), n2_66(7), n2_68(8)>
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb188 0x26deb338 0x26deb458 0x26deb608
+src/canny_scalar.cpp:259:6: note: node 0x26deb188 (max_nunits=1, refcnt=1) vector(1) int
+src/canny_scalar.cpp:259:6: note: op template: n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_63 = (int) _37;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_64 = (int) _42;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb578
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb578 (max_nunits=1, refcnt=1) vector(1) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _37, _42 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb338 (max_nunits=1, refcnt=1) vector(1) int
+src/canny_scalar.cpp:259:6: note: op template: n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_69 = (int) _11;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_70 = (int) _15;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb3c8
+src/canny_scalar.cpp:259:6: note: node 0x26deb3c8 (max_nunits=1, refcnt=1) const vector(1) unsigned char
+src/canny_scalar.cpp:259:6: note: op template: _11 = *_10;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 _11 = *_10;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 _15 = *_14;
+src/canny_scalar.cpp:259:6: note: 	load permutation { 0 2 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb458 (max_nunits=1, refcnt=1) vector(1) int
+src/canny_scalar.cpp:259:6: note: op template: n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_65 = (int) _19;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_66 = (int) _23;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb4e8
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb4e8 (max_nunits=1, refcnt=1) vector(1) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _19, _23 }
+src/canny_scalar.cpp:259:6: note: node 0x26deb608 (max_nunits=1, refcnt=1) vector(1) int
+src/canny_scalar.cpp:259:6: note: op template: n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 0 n1_67 = (int) _27;
+src/canny_scalar.cpp:259:6: note: 	stmt 1 n2_68 = (int) _32;
+src/canny_scalar.cpp:259:6: note: 	children 0x26deb728
+src/canny_scalar.cpp:259:6: note: node (external) 0x26deb728 (max_nunits=1, refcnt=1) vector(1) unsigned char
+src/canny_scalar.cpp:259:6: note: 	{ _27, _32 }
+src/canny_scalar.cpp:259:6: note: Cost model analysis: 
+src/canny_scalar.cpp:259:6: note: Cost model analysis for part in loop 2:
+  Vector cost: 37
+  Scalar cost: 13
+src/canny_scalar.cpp:259:6: missed: not vectorized: vectorization is not profitable.
+src/canny_scalar.cpp:307:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:307:23: missed: not vectorized: unsupported data-type
+src/canny_scalar.cpp:307:23: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:307:23: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1QI
+src/canny_scalar.cpp:301:6: note: vectorized 0 loops in function.
+src/canny_scalar.cpp:312:1: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:312:1: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1QI
+src/canny_scalar.cpp:356:23: optimized: loop vectorized using variable length vectors
+src/canny_scalar.cpp:336:17: missed: couldn't vectorize loop
+src/canny_scalar.cpp:336:17: missed: not vectorized: loop nest containing two or more consecutive inner loops cannot be vectorized
+src/canny_scalar.cpp:340:30: missed: couldn't vectorize loop
+src/canny_scalar.cpp:348:30: missed: not vectorized: data ref analysis failed: _22 = .MASK_LOAD (_21, 8B, _45, 0);
+src/canny_scalar.cpp:341:34: missed: couldn't vectorize loop
+src/canny_scalar.cpp:318:6: missed: not vectorized: unsupported use in stmt.
+src/canny_scalar.cpp:331:23: missed: couldn't vectorize loop
+src/canny_scalar.cpp:318:6: missed: not vectorized: unsupported use in stmt.
+src/canny_scalar.cpp:318:6: note: vectorized 1 loops in function.
+src/canny_scalar.cpp:318:6: missed: splitting region at dont-vectorize loop 7 entry at bb41
+src/canny_scalar.cpp:323:44: missed: statement clobbers memory: work_55 = aligned_alloc (64, _82);
+src/canny_scalar.cpp:324:16: missed: statement clobbers memory: memcpy (work_55, labels_56(D), _1);
+src/canny_scalar.cpp:327:37: missed: statement clobbers memory: queue_60 = aligned_alloc (64, _53);
+src/canny_scalar.cpp:338:30: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:338:30: note: ***** Skipping vector mode RVVM1QI, which would repeat the analysis for RVVM1QI
+src/canny_scalar.cpp:338:30: missed: splitting region at loop 8 exit at bb54
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode RVVM1QI
+src/canny_scalar.cpp:345:21: note: ***** The result for vector mode RVVM1QI would be the same
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode RVVMF2QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode RVVMF2QI
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode RVVMF4QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode RVVMF4QI
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode RVVMF8QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode RVVMF8QI
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode V16QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode V16QI
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode V8QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode V8QI
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode V4QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode V4QI
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode V2QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode V2QI
+src/canny_scalar.cpp:345:21: note: ***** Re-trying analysis with vector mode V1QI
+src/canny_scalar.cpp:345:21: note: ***** Analysis failed with vector mode V1QI
+src/canny_scalar.cpp:345:21: missed: splitting region at loop 2 exit at bb34
+src/canny_scalar.cpp:336:17: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:336:17: missed: splitting region at dominance boundary bb8
+src/canny_scalar.cpp:336:17: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:336:17: missed: splitting region at dominance boundary bb3
+src/canny_scalar.cpp:357:28: missed: statement clobbers memory: vect__28.321_93 = .MASK_LEN_LOAD (vectp_work.319_141, 8B, { -1, ... }, _95(D), _263, 0);
+src/canny_scalar.cpp:357:19: missed: statement clobbers memory: .MASK_LEN_STORE (vectp_output.325_169, 8B, { -1, ... }, _263, 0, vect__83.324_84);
+src/canny_scalar.cpp:356:23: note: ***** Analysis failed with vector mode VOID
+src/canny_scalar.cpp:359:9: missed: statement clobbers memory: free (queue_60);
+src/canny_scalar.cpp:360:9: missed: statement clobbers memory: free (work_55);
+src/canny_scalar.cpp:361:1: note: ***** Analysis failed with vector mode VOID

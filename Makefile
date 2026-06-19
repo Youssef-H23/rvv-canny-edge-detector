@@ -1,9 +1,8 @@
 # ==========================================
 # COMPILER CONFIGURATIONS
 # ==========================================
-TOOLCHAIN_BIN = compiler/built_thingy/bin
 HOST_CXX = g++
-RV_CXX   = $(TOOLCHAIN_BIN)/riscv64-unknown-elf-g++
+RV_CXX   = riscv64-unknown-elf-g++
 
 # Compiler Flags
 HOST_FLAGS = -std=c++17 -Wall -I include
@@ -34,7 +33,7 @@ WIDTH  = 512
 HEIGHT = 341
 
 # ==========================================
-.PHONY: all test host_run canny_rv canny_vector run run_vector sweep_VLEN sweep_opt show convert clean 
+.PHONY: all test host_run canny_rv canny_vector run run_vector sweep_VLEN sweep_opt show convert clean canny_rv_autovec
 
 all: test canny_rv
 
@@ -58,13 +57,13 @@ host_run: $(MAIN_SRC) $(PIPELINE_SRC)
 # --- RULE 3: make canny_rv (RISC-V Cross-Compilation) ---
 canny_rv: $(MAIN_SRC) $(PIPELINE_SRC)
 	@mkdir -p $(RV_BUILD_DIR)
-	$(RV_CXX) $(RV_FLAGS) $(MAIN_SRC) -O3 $(PIPELINE_SRC)  -o $(RV_BUILD_DIR)/canny_pipeline.elf
+	$(RV_CXX) $(RV_FLAGS) $(MAIN_SRC) -O2 $(PIPELINE_SRC)  -o $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- RISC-V Binary Successfully Compiled ---"
 
 # --- RULE 3b: make canny_vector (RISC-V Cross-Compilation, RVV Intrinsics) ---
 canny_vector: $(MAIN_SRC) $(VECTOR_SRC) $(PIPELINE_SRC)
 	@mkdir -p $(RV_BUILD_DIR)
-	$(RV_CXX) $(RV_FLAGS) -DUSE_RVV -O3 $(MAIN_SRC) $(VECTOR_SRC) $(PIPELINE_SRC) -o $(RV_BUILD_DIR)/canny_vector.elf
+	$(RV_CXX) $(RV_FLAGS) -DUSE_RVV -O2 $(MAIN_SRC) $(VECTOR_SRC) $(PIPELINE_SRC) -o $(RV_BUILD_DIR)/canny_vector.elf
 	@echo "--- RISC-V Vector Binary Successfully Compiled ---"
 
 # --- RULE 4: make run (Execute on QEMU) ---
@@ -95,10 +94,13 @@ sweep_VLEN: $(RV_BUILD_DIR)/canny_pipeline.elf
 # --- RULE 6: make sweep_opt (Test multiple optimization levels) ---
 sweep_opt: $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- Sweeping Optimization Levels O0, O1, O2, O3 Os Ofast---"
+	@mkdir -p autovec_reports
 	@for opt in O0 O1 O2 O3 Os Ofast; do \
 		echo "========================================="; \
 		echo "Testing Optimization Level: $$opt"; \
-		$(RV_CXX) $(RV_FLAGS) -$$opt $(MAIN_SRC) $(PIPELINE_SRC) -o $(RV_BUILD_DIR)/canny_pipeline_$$opt.elf; \
+		$(RV_CXX) $(RV_FLAGS) -$$opt -fopt-info-vec-all $(MAIN_SRC) $(PIPELINE_SRC) \
+			-o $(RV_BUILD_DIR)/canny_pipeline_$$opt.elf \
+			2> autovec_reports/autovec_$$opt.txt; \
 		echo "Binary size: $$(stat -c%s $(RV_BUILD_DIR)/canny_pipeline_$$opt.elf) bytes"; \
 		qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
 			$(RV_BUILD_DIR)/canny_pipeline_$$opt.elf $(IMG) $(WIDTH) $(HEIGHT); \
