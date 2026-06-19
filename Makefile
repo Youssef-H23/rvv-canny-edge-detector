@@ -122,6 +122,13 @@ sweep_opt: $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "========================================="
 	@echo "--- Sweep Complete ---"
 
+# --- RULE 6c: make sweep_lmul (Phase 6 LMUL scaling test) ---
+sweep_lmul: tests/lmul_experiment.cpp
+	@mkdir -p $(RV_BUILD_DIR)
+	$(RV_CXX) $(RV_FLAGS) -O3 tests/lmul_experiment.cpp -o $(RV_BUILD_DIR)/lmul_experiment.elf
+	@echo "--- Running LMUL Speed Comparison on QEMU ---"
+	qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) $(RV_BUILD_DIR)/lmul_experiment.elf
+
 # --- RULE 7: make show (Convert output/raw/*.raw to PNGs and display) ---
 show:
 	@echo "--- Converting output/raw/*.raw to PNG ---"

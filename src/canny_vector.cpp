@@ -229,16 +229,15 @@ void sobel_gradients_rvv(const uint8_t *input, int16_t *gx, int16_t *gy, int w, 
             vint16m2_t gx_bot = __riscv_vsub_vv_i16m2(br, bl, vl);
             vint16m2_t vgx = __riscv_vadd_vv_i16m2(
                 __riscv_vadd_vv_i16m2(gx_top, gx_mid, vl), gx_bot, vl);
-
-            vint16m2_t gy_left = __riscv_vsub_vv_i16m2(bl, tl, vl);
-            vint16m2_t gy_mid  = __riscv_vsll_vx_i16m2(__riscv_vsub_vv_i16m2(bc, tr, vl), 1, vl);
-            vint16m2_t gy_rght = __riscv_vsub_vv_i16m2(br, tr2, vl);
+// Gy = Top - Bottom (Fixed order!)
+            vint16m2_t gy_left = __riscv_vsub_vv_i16m2(tl, bl, vl);
+            vint16m2_t gy_mid  = __riscv_vsll_vx_i16m2(__riscv_vsub_vv_i16m2(tr, bc, vl), 1, vl);
+            vint16m2_t gy_rght = __riscv_vsub_vv_i16m2(tr2, br, vl);
             vint16m2_t vgy = __riscv_vadd_vv_i16m2(
                 __riscv_vadd_vv_i16m2(gy_left, gy_mid, vl), gy_rght, vl);
 
             __riscv_vse16_v_i16m2(gx_out, vgx, vl);
             __riscv_vse16_v_i16m2(gy_out, vgy, vl);
-
             s0 += vl; s1 += vl; s2 += vl;
             gx_out += vl; gy_out += vl;
             n -= vl;
