@@ -1,5 +1,4 @@
 #include "../headers/canny_scalar.h"
-
 #include <cstring>   // memset, memcpy
 #include <cmath>     // sqrtf
 #include <cstdio>    // fopen, fread, fclose
@@ -77,9 +76,24 @@ template void convolve2D<uint8_t, int32_t, int16_t>(
 // ============================================================================
 // STAGE 1 - GAUSSIAN BLUR
 // ============================================================================
-
-#ifndef USE_RVV
 void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
+                          int width, int height) {
+    // 5x5 integer Gaussian kernel, coefficients sum to 273
+    static const int16_t GAUSSIAN_KERNEL[25] = {
+        1,  4,  7,  4, 1,
+        4, 16, 26, 16, 4,
+        7, 26, 41, 26, 7,
+        4, 16, 26, 16, 4,
+        1,  4,  7,  4, 1
+    };
+    static const int32_t GAUSSIAN_SUM = 273;   // divisor that normalizes brightness
+
+    convolve2D<uint8_t, int32_t, int16_t>(
+        input, output, width, height, GAUSSIAN_KERNEL, 5, GAUSSIAN_SUM);
+}
+
+
+void gaussian_blur_separable_scalar(const uint8_t* input, uint8_t* output,
                           int width, int height) {
     static const int16_t H[5] = {1, 4, 7, 4, 1};
     const int ksum = 273;
@@ -119,6 +133,7 @@ void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
 
     free(temp);
 }
+
 
 // ============================================================================
 // STAGE 2 - SOBEL GRADIENTS
@@ -167,7 +182,6 @@ void sobel_gradients_scalar(const uint8_t* input,
     }
 }
 
-#endif /* USE_RVV */
 
 // ============================================================================
 // STAGE 3a - GRADIENT MAGNITUDE, L1 NORM

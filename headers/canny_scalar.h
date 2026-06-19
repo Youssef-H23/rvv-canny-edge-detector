@@ -73,6 +73,9 @@ extern template void convolve2D<uint8_t, int32_t, int16_t>(
 void gaussian_blur_scalar(const uint8_t* input, uint8_t* output,
                           int width, int height);
 
+
+void gaussian_blur_separable_scalar(const uint8_t* input, uint8_t* output,
+                          int width, int height);
 // ============================================================================
 // STAGE 2 - SOBEL GRADIENTS
 //

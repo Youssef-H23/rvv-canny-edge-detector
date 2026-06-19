@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
     int height = atoi(argv[3]);
     int total  = width * height;   // number of pixels
 
-    // Loa
+    // Load the input image into a 64-byte aligned buffer for RVV compatibility.
     uint8_t* input = load_raw_image(input_path, width, height);
     if (!input) {
         fprintf(stderr, "Error: could not open '%s'\n", input_path);
