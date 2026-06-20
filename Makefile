@@ -34,7 +34,7 @@ WIDTH  = 512
 HEIGHT = 341
 
 # ==========================================
-.PHONY: all test host_run canny_rv canny_vector run run_vector sweep_VLEN sweep_opt show convert clean canny_rv_autovec vector_test
+.PHONY: all test host_run canny_rv canny_vector run run_vector sweep_VLEN sweep_opt show convert clean canny_rv_autovec vector_test sweep_lmul compare opt_table
 
 all: test canny_rv
 
@@ -128,6 +128,26 @@ sweep_lmul: tests/lmul_experiment.cpp
 	$(RV_CXX) $(RV_FLAGS) -O3 tests/lmul_experiment.cpp -o $(RV_BUILD_DIR)/lmul_experiment.elf
 	@echo "--- Running LMUL Speed Comparison on QEMU ---"
 	qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) $(RV_BUILD_DIR)/lmul_experiment.elf
+
+# --- RULE 6d: make compare (2D vs separable Gaussian, scalar vs RVV; L1 vs L2 magnitude timing) ---
+# Swept at -O2 and -O3, not just one flag: GCC's auto-vectorizer (-ftree-vectorize)
+# only turns on at -O3, and it vectorizes the L1 magnitude loop (simple abs+add)
+# but not L2 (sqrtf blocks it). That changes the relative L1-vs-L2 timing between
+# -O2 and -O3, so a single-flag snapshot here would be misleading.
+compare: tests/comparisons.cpp $(PIPELINE_SRC) $(VECTOR_SRC)
+	@mkdir -p $(RV_BUILD_DIR)
+	@for opt in O2 O3; do \
+		echo "========================================="; \
+		echo "Testing Optimization Level: $$opt"; \
+		$(RV_CXX) $(RV_FLAGS) -$$opt tests/comparisons.cpp $(PIPELINE_SRC) $(VECTOR_SRC) \
+			-o $(RV_BUILD_DIR)/comparisons_$$opt.elf; \
+		qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) $(RV_BUILD_DIR)/comparisons_$$opt.elf; \
+	done
+	@echo "========================================="
+
+# --- RULE 6e: make opt_table (Phase 7.1 optimization table: O0/O2/O3/Auto-vec/RVV128/RVV256) ---
+opt_table:
+	@bash scripts/optimization_table.sh
 
 # --- RULE 7: make show (Convert output/raw/*.raw to PNGs and display) ---
 show:
