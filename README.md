@@ -38,32 +38,99 @@ make test
 ```
 *Use this target constantly during development to verify that your C++ logic works perfectly before attempting cross-compilation.*
 
-### 2. Cross-Compiling for RISC-V
-To cross-compile the main application for the RISC-V architecture using the Vector Extension:
+
+
+### 2. Running Natively on Host (Visual Check)
+To compile and run the pipeline natively on your host machine for a quick execution and visual check:
+```bash
+make host_run
+```
+
+
+### 3. Cross-Compiling for RISC-V
+To cross-compile the main application for the RISC-V architecture using the Scalar baseline or the Vector Extension:
+
+*For Cross-Compiling the Scalar Pipeline
 ```bash
 make canny_rv
 ```
-*This uses your RISC-V toolchain to generate the `canny_pipeline.elf` binary inside the `build/rv/` directory.
+*For Cross-Compiling the Custom RVV Intrinsics Pipeline
+```bash
+make canny_vector
+```
+*This uses your RISC-V toolchain to generate the `canny_pipeline.elf` or `canny_vector.elf` binary inside the `build/rv/` directory.*
 
-### 3. Running on QEMU Emulator
-To execute the cross-compiled RISC-V binary via QEMU:
+
+### 4. Running on QEMU Emulator
+To execute the cross-compiled RISC-V binaries via QEMU:
+
+To run the Scalar Pipeline
 ```bash
 make run
 ```
+To run the Custom Vector Pipeline
+```bash
+make run_vector
+```
 *Note: The Makefile passes the `VLEN=128` parameter to QEMU by default, simulating a 128-bit vector register length. Do not hardcode this value in your C++ code!*
 
-### 4. Sweeping Vector Lengths (VLEN)
+
+### 5. Vector Equivalence Testing
+To run tests that validate your custom RVV vector implementation yields mathematically identical results compared to the scalar baseline across multiple hardware register sizes:
+```bash
+make vector_test
+```
+*This automatically builds and executes the vector test suite on QEMU sequentially forcing VLEN=128, VLEN=256, and VLEN=512 bits.*
+
+
+### 6. Sweeping Vector Lengths (VLEN)
 To prove the implementation is Vector Length Agnostic (VLA), you can run the executable across multiple hardware configurations automatically:
 ```bash
-make sweep
+make sweep_VLEN
 ```
-*This executes the RISC-V binary on QEMU with VLEN set to 128, 256 and 512 bits consecutively.*
+*This executes the RISC-V Vector binary on QEMU with VLEN set to 128, 256, and 512 bits consecutively.*
 
-### 5. Cleaning the Workspace
-To remove all generated build artifacts, object files, and binaries:
+
+
+
+### 7. Sweeping Optimization Levels & Auto-Vectorization
+To test the scalar pipeline across all standard GCC optimization levels ($O0$, $O1$, $O2$, $O3$, $Os$, $Ofast$) and dump compiler diagnostic reports:
+```bash
+make sweep_opt
+```
+*This executes the performance sweep, checks binary sizes, and saves the detailed auto-vectorization decision logs inside the `autovec_reports/` directory.*
+
+
+
+### 8. LMUL Scaling Experiment
+To profile the performance impact when altering the Vector Register Grouping factor (LMUL) to analyze the trade-off between register pressure and loop throughput:
+```bash
+make sweep_lmul
+```
+
+### 9. Post-Processing & Visual Utilities
+To convert the processed raw image output or manipulate output frames:
+
+Convert output/raw/*.raw artifacts into viewable PNGs
+```bash
+make show
+```
+Convert reference PNGs back into raw buffers for precise binary diffing
+```bash
+make convert
+
+```
+
+
+### 10. Cleaning the Workspace
+To remove all generated build artifacts, object files, binaries, and temporary directories:
 ```bash
 make clean
 ```
+
+
+
+
 
 ## 📊 Scalar Pipeline Performance Sweep
 
@@ -91,30 +158,6 @@ Below are the detailed profiling results for the *Scalar Pipeline* executed acro
 
 3. *Embedded Efficiency (Os flag):*
    The $Os$ flag successfully reduced the final binary size to *404,392 bytes* (nearly identical to $O1$), while retaining an impressive total execution time of 7.3165 s, making it the most balanced candidate for memory-constrained embedded environments.
-
-
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
