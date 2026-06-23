@@ -18,6 +18,10 @@ GTEST_LIBS = -L$(HOME)/.local/lib -lgtest -lgtest_main -pthread
 HOST_BUILD_DIR = build/host
 RV_BUILD_DIR   = build/rv
 
+#Image output directories
+OUTPUT_DIR     = output
+RAW_DIR        = $(OUTPUT_DIR)/raw
+
 # Source files
 PIPELINE_SRC = src/canny_scalar.cpp           # shared implementation
 VECTOR_SRC   = src/canny_vector.cpp           # RVV intrinsics (Gaussian + Sobel)
@@ -70,12 +74,14 @@ canny_vector: $(MAIN_SRC) $(VECTOR_SRC) $(PIPELINE_SRC)
 # --- RULE 4: make run (Execute on QEMU) ---
 run: canny_rv $(RV_BUILD_DIR)/canny_pipeline.elf
 	@echo "--- Launching on QEMU (VLEN=$(VLEN)) ---"
+	@mkdir -p $(RAW_DIR)
 	qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
 		$(RV_BUILD_DIR)/canny_pipeline.elf $(IMG) $(WIDTH) $(HEIGHT)
 
 # --- RULE 4b: make run_vector (Execute Vector Pipeline on QEMU) ---
 run_vector: canny_vector $(RV_BUILD_DIR)/canny_vector.elf
 	@echo "--- Launching Vector Pipeline on QEMU (VLEN=$(VLEN)) ---"
+	@mkdir -p $(RAW_DIR)
 	qemu-riscv64 -cpu rv64,v=true,vlen=$(VLEN) \
 		$(RV_BUILD_DIR)/canny_vector.elf $(IMG) $(WIDTH) $(HEIGHT)
 

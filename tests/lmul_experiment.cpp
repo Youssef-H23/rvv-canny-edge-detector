@@ -214,7 +214,7 @@ int main() {
     for(int i = 0; i < ITERATIONS; i++) gaussian_blur_rvv_lmul4(in, blur_out, W, H);
     auto g4_e = std::chrono::high_resolution_clock::now();
     double gt4 = std::chrono::duration<double>(g4_e - g4_s).count();
-    printf("[LMUL=4] Time: %6.4f s (Speedup: %.2fx) *Uses 16-bit accumulator hack\n\n", gt4, gt1/gt4);
+    printf("[LMUL=4] Time: %6.4f s (Speedup: %.2fx)\n\n", gt4, gt1/gt4);
 
     free(in); free(blur_out); free(gx); free(gy);
     return 0;
